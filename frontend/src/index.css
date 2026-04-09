@@ -1,0 +1,46 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold:       #c9a95a;
+  --gold-dim:   #8a7240;
+  --gold-glow:  rgba(201,169,90,0.18);
+  --bg:         #07070d;
+  --surface:    rgba(255,255,255,0.04);
+  --surface-2:  rgba(255,255,255,0.07);
+  --border:     rgba(201,169,90,0.18);
+  --border-2:   rgba(255,255,255,0.07);
+  --text:       #a89f8f;
+  --text-h:     #f0ece4;
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+}
+
+body { margin: 0; min-height: 100svh; }
+
+#root {
+  width: 100%;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* 배경 그레인 + 그라디언트 */
+#root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,169,90,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 80%, rgba(201,169,90,0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+p { line-height: 1.8; }

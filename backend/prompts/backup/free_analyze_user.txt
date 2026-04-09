@@ -1,0 +1,17 @@
+다음 사주팔자를 분석해주세요.
+
+생년월일시: {birth_info}
+성별: {gender}
+
+사주팔자:
+- 년주(年柱): {year_korean} ({year_stem}{year_branch})
+- 월주(月柱): {month_korean} ({month_stem}{month_branch})
+- 일주(日柱): {day_korean} ({day_stem}{day_branch})
+- 시주(時柱): {hour_korean} ({hour_stem}{hour_branch})
+
+{rag_context}
+
+[출력 규칙]
+- 제목(# ...), 기본 정보 요약, 사주 원국 구성 표는 절대 출력하지 마세요.
+- 오행 분석부터 바로 시작하세요.
+- 분석이 끝난 뒤 자연스럽게 다음 문구를 변형해서 삽입하세요: "재물운과 직업운이 더 궁금하다면 재물 사주에서, 인연과 연애운이 궁금하다면 연애 사주에서 더 깊은 분석을 만나보세요."
