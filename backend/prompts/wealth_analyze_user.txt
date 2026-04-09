@@ -1,0 +1,21 @@
+다음 사주의 재물 운용 성향을 분석해주세요.
+
+생년월일시: {birth_info} / 성별: {gender}
+
+- 년주: {year_korean} ({year_stem}{year_branch})
+- 월주: {month_korean} ({month_stem}{month_branch})
+- 일주: {day_korean} ({day_stem}{day_branch})
+- 시주: {hour_korean} ({hour_stem}{hour_branch})
+
+{rag_context}
+
+[출력 규칙]
+- 제목, 기본 정보 요약, 사주 원국 표는 출력하지 마세요.
+- 아래 섹션 순서로 작성하세요:
+  1) 재물 구조 진단
+  2) 강점 수익 모델
+  3) 손실/누수 리스크
+  4) 직업/사업 방향
+  5) 실천 가이드(단기/중기)
+- 각 섹션은 3~5문장으로 구체적으로 작성하세요.
+- 마지막에 3줄 요약을 작성하세요. 첫 줄은 "핵심 한줄:", 둘째 줄은 "주의 포인트:", 셋째 줄은 "실행 한줄:"로 시작하세요.

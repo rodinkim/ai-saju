@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import saju
-from services.llm import FREE_MODEL, PAID_MODEL
+from services.llm import FREE_MODEL
 
 app = FastAPI(
     title="AI 사주 분석 서비스",
@@ -25,8 +25,7 @@ app.include_router(saju.router)
 async def startup():
     print(f"\n{'='*50}")
     print(f"  AI 사주 분석 서비스 시작 v2")
-    print(f"  무료 모델: {FREE_MODEL}")
-    print(f"  유료 모델: {PAID_MODEL}")
+    print(f"  분석 모델: {FREE_MODEL}")
     print(f"{'='*50}\n")
 
 

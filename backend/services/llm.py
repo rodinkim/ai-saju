@@ -14,7 +14,6 @@ client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 FREE_MODEL = "claude-haiku-4-5-20251001"
-PAID_MODEL = "claude-sonnet-4-6"
 
 def _load(filename: str) -> str:
     return (PROMPTS_DIR / filename).read_text(encoding="utf-8")
@@ -57,15 +56,22 @@ async def analyze_with_llm(
     gender: Gender,
     birth_info: str,
     rag_context: str = "",
+    category: str = "free",
 ) -> tuple[str, str]:
-    """유료 사주 분석 (Sonnet). Returns: (analysis, summary)"""
+    """사주 분석. Returns: (analysis, summary)"""
+    user_prompt = "analyze_user.txt"
+    system_prompt = "system.txt"
+    if category == "wealth":
+        user_prompt = "wealth_analyze_user.txt"
+        system_prompt = "wealth_system.txt"
+
     user_message = _build_user_message(
-        _load("analyze_user.txt"), four_pillars, gender, birth_info, rag_context
+        _load(user_prompt), four_pillars, gender, birth_info, rag_context
     )
     message = await client.messages.create(
-        model=PAID_MODEL,
+        model=FREE_MODEL,
         max_tokens=4096,
-        system=_load("system.txt"),
+        system=_load(system_prompt),
         messages=[{"role": "user", "content": user_message}],
     )
     return _parse_analysis(message.content[0].text)
@@ -77,11 +83,12 @@ async def stream_with_llm(
     birth_info: str,
     rag_context: str = "",
     free: bool = False,
+    category: str = "free",
 ) -> AsyncIterator[str]:
     """
     사주 스트리밍 분석.
     free=True  → 무료사주 프롬프트 + Haiku
-    free=False → 유료사주 프롬프트 + Sonnet
+    free=False → 일반/재물 프롬프트 + Haiku
     """
     if free:
         system = _load("free_system.txt")
@@ -90,12 +97,19 @@ async def stream_with_llm(
         )
         model = FREE_MODEL
         max_tokens = 4096
+    elif category == "wealth":
+        system = _load("wealth_system.txt")
+        user_message = _build_user_message(
+            _load("wealth_analyze_user.txt"), four_pillars, gender, birth_info, rag_context
+        )
+        model = FREE_MODEL
+        max_tokens = 4096
     else:
         system = _load("system.txt")
         user_message = _build_user_message(
             _load("analyze_user.txt"), four_pillars, gender, birth_info, rag_context
         )
-        model = PAID_MODEL
+        model = FREE_MODEL
         max_tokens = 4096
 
     async with client.messages.stream(
