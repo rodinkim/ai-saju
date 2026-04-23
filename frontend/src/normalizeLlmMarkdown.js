@@ -1,7 +1,8 @@
 /**
- * LLM이 자주 내는 깨진 마크다운(특히 CJK + **)을 보정합니다.
- * - 규칙 나열 대신 ** 구분자를 기준으로 열림/닫힘을 구분해 공백만 삽입합니다.
- * - 짝이 맞지 않는 **는 보수적으로 한 번만 처리합니다.
+ * LLM이 자주 내는 `한글**강조**` 형태는 remark가 볼드로 못 읽는 경우가 많아,
+ * `**` 짝이 맞을 때만 열림·닫힘 앞뒤에 공백을 넣습니다.
+ * 짝이 맞지 않으면 원문을 바꾸지 않습니다(깨진 단일 `**` 보정 제거).
+ * 전각 별(U+FF0A) → ASCII `*`, 과도한 빈 줄 정리.
  */
 
 const NEEDS_SPACE_BEFORE_OPEN = /[\uac00-\ud7af\u4e00-\u9fff\u3040-\u30ffA-Za-z0-9)\]」』）]/;
@@ -24,7 +25,6 @@ function insertSpaceAfterClose(afterChunk) {
   return ` ${afterChunk}`;
 }
 
-/** 볼드 안쪽( split 후 홀수 인덱스) 앞뒤 공백 제거 — `** 텍스트**` / `**텍스트 **` 보정 */
 function trimBoldInnerSegments(parts) {
   return parts.map((chunk, i) => {
     if (i % 2 === 0) return chunk;
@@ -36,36 +36,24 @@ function trimBoldInnerSegments(parts) {
  * @param {string} text
  * @returns {string}
  */
-export function normalizeLlmMarkdown(text) {
+function normalizeBoldInSegment(text) {
   if (!text || !text.includes('**')) {
-    return text?.replace(/\n{3,}/g, '\n\n') ?? text;
+    return text;
   }
 
   const parts = text.split('**');
   if (parts.length < 2) {
-    return text.replace(/\n{3,}/g, '\n\n');
+    return text;
   }
 
-  // 단일 ** 한 쌍만 있는 경우(미닫힘 등): 열림 전 공백 + 볼드 시작 공백 제거
+  /** 단일 `**`만 있으면 닫힘이 없어 파서가 망가지므로 손대지 않음 */
   if (parts.length === 2) {
-    const head = insertSpaceBeforeOpen(parts[0]);
-    const inner = parts[1].replace(/^\s+/, '').replace(/\s+$/, '');
-    return `${head}**${inner}`.replace(/\n{3,}/g, '\n\n');
+    return text;
   }
 
-  // ** 개수가 홀수면 짝이 안 맞음 → 보수적 정규식만 적용
+  /** 짝 안 맞는 `**` 개수면 보정하지 않음 */
   if (parts.length % 2 === 0) {
-    return text
-      .replace(
-        /([\uac00-\ud7af\u4e00-\u9fff\u3040-\u30ffA-Za-z0-9)\]」』）])\*\*(?=\S)/g,
-        '$1 **',
-      )
-      .replace(/\*\* +(?=\S)/g, '**')
-      .replace(
-        /([\uac00-\ud7af\u4e00-\u9fff\u3040-\u30ffA-Za-z0-9)\]」』）]) +\*\*(?=\s|$|[\uac00-\ud7af\u4e00-\u9fff])/g,
-        '$1**',
-      )
-      .replace(/\n{3,}/g, '\n\n');
+    return text;
   }
 
   const segments = trimBoldInnerSegments(parts);
@@ -84,5 +72,31 @@ export function normalizeLlmMarkdown(text) {
     }
   }
 
-  return out.replace(/\n{3,}/g, '\n\n');
+  return out;
+}
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+/**
+ * 단일 `~`를 이스케이프합니다.
+ * `~~취소선~~`은 건드리지 않고, 숫자·텍스트 사이의 `~`(범위 표현)만 `\~`로 변환합니다.
+ * 예: `33~40세` → `33\~40세`, `2033~2043년` → `2033\~2043년`
+ */
+function escapeSingleTilde(text) {
+  // `~~`는 취소선으로 유지, 단독 `~`만 이스케이프
+  return text.replace(/(?<!~)~(?!~)/g, '\\~');
+}
+
+export function normalizeLlmMarkdown(text) {
+  if (!text) return text;
+  const normalizedStars = text.replace(/\uFF0A/g, '*');
+
+  const lines = normalizedStars.split(/\r?\n/);
+  const out = lines
+    .map((line) => escapeSingleTilde(line))
+    .map((line) => normalizeBoldInSegment(line));
+
+  return out.join('\n').replace(/\n{3,}/g, '\n\n');
 }

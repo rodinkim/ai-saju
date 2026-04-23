@@ -5,7 +5,22 @@ import remarkGfm from 'remark-gfm'
 import { normalizeLlmMarkdown } from './normalizeLlmMarkdown.js'
 import './App.css'
 
-const API_URL = 'http://localhost:8000/api/saju/analyze/stream'
+const API_HOST = window.location.hostname || 'localhost'
+const API_URL = `http://${API_HOST}:8000/api/saju/analyze/stream`
+
+/** `node` / `rest`는 DOM에 넘기지 않음(Safari·React 경고로 스타일 무시 유발 가능). */
+const analysisMarkdownComponents = {
+  strong: ({ node: _node, className, children }) => (
+    <strong className={['md-strong', className].filter(Boolean).join(' ')}>
+      {children}
+    </strong>
+  ),
+  b: ({ node: _node, className, children }) => (
+    <b className={['md-strong', className].filter(Boolean).join(' ')}>
+      {children}
+    </b>
+  ),
+}
 
 const STEM_ELEMENT = {
   '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
@@ -62,7 +77,7 @@ const SINSAL_KIND = {
 
 const SINSAL_PRIORITY = { focus: 0, gil: 1, jung: 2, hyung: 3 }
 
-function ExtrasSection({ gwiin, gwiinDetails, sinsal }) {
+function ExtrasSection({ gwiin, gwiinDetails, sinsal, wealthMode }) {
   if (!gwiin?.length && !sinsal?.length) return null
   const pillarOrder = ['년', '월', '일', '시']
   const groupedSinsal = pillarOrder
@@ -81,7 +96,7 @@ function ExtrasSection({ gwiin, gwiinDetails, sinsal }) {
     }))
     .filter((group) => group.items.length > 0)
 
-  return (
+  const body = (
     <div className="extras-section">
       {gwiin?.length > 0 && (
         <div className="extras-row">
@@ -121,6 +136,17 @@ function ExtrasSection({ gwiin, gwiinDetails, sinsal }) {
       )}
     </div>
   )
+
+  if (wealthMode) {
+    return (
+      <details className="extras-details extras-details-wealth">
+        <summary className="extras-details-summary">귀인·신살 참고</summary>
+        {body}
+      </details>
+    )
+  }
+
+  return body
 }
 
 function PillarCard({ label, pillar }) {
@@ -144,6 +170,7 @@ export default function App() {
   const navigate = useNavigate()
   const location = useLocation()
   const category = location.state?.category
+  const isLove = category?.id === 'love'
 
   console.log('[App] 페이지 로드 v2 | category:', category?.id ?? 'none', '| API:', API_URL)
 
@@ -186,7 +213,7 @@ export default function App() {
           hour: shi.hour, minute: shi.minute,
           gender: form.gender, calendar_type: form.calendar_type,
           is_leap_month: form.is_leap_month,
-          category: category?.id ?? 'free',
+          category: category?.id ?? 'wealth',
         }),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.detail || '분석 실패') }
@@ -350,7 +377,9 @@ export default function App() {
       {pillars && (
         <div className="result-section">
 
-          <div className="result-label">사주팔자 원국</div>
+          <div className="result-label">
+            {isLove ? '원국 (연애 해석의 기준)' : '원국 (재물 해석의 기준)'}
+          </div>
 
           <div className="pillars">
             <PillarCard label="시주 時柱" pillar={pillars.hour_pillar} />
@@ -358,15 +387,27 @@ export default function App() {
             <PillarCard label="월주 月柱" pillar={pillars.month_pillar} />
             <PillarCard label="년주 年柱" pillar={pillars.year_pillar} />
           </div>
-          <ExtrasSection gwiin={pillars.gwiin} gwiinDetails={pillars.gwiin_details} sinsal={pillars.sinsal} />
+          <ExtrasSection
+            gwiin={pillars.gwiin}
+            gwiinDetails={pillars.gwiin_details}
+            sinsal={pillars.sinsal}
+            wealthMode={!isLove}
+          />
 
           {streamText && (
             <>
-              <div className="result-label">명리 분석</div>
+              <div className="result-label">
+                {isLove ? '명리 분석 (연애 중심 · 종합)' : '명리 분석 (재물 중심 · 종합)'}
+              </div>
               <div className="analysis-outer">
                 <div className="analysis-inner">
                   <div className="analysis-body">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{normalizeLlmMarkdown(streamText)}</ReactMarkdown>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={analysisMarkdownComponents}
+                    >
+                      {normalizeLlmMarkdown(streamText)}
+                    </ReactMarkdown>
                     {!result && <span className="stream-cursor" />}
                   </div>
                 </div>

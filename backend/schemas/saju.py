@@ -21,7 +21,7 @@ class SajuRequest(BaseModel):
     gender: Gender = Field(..., description="성별")
     calendar_type: CalendarType = Field(CalendarType.solar, description="양력/음력")
     is_leap_month: bool = Field(False, description="음력 윤달 여부 (calendar_type=lunar 일 때만 적용)")
-    category: str = Field("free", description="분석 카테고리 (free / wealth / love)")
+    category: str = Field("wealth", description="분석 카테고리 (wealth / love)")
 
     model_config = {
         "json_schema_extra": {

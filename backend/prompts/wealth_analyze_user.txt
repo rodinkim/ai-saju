@@ -1,0 +1,22 @@
+다음 사주의 재물 분석을 작성하세요. 기준 연도: {current_year}년.
+
+생년월일시: {birth_info} / 성별: {gender}
+- 연령(기준일 {reference_date_iso}): 만 {age_international}세, 세는 나이 {age_korean}세.
+
+- 년주: {year_korean} ({year_stem}{year_branch})
+- 월주: {month_korean} ({month_stem}{month_branch})
+- 일주: {day_korean} ({day_stem}{day_branch})
+- 시주: {hour_korean} ({hour_stem}{hour_branch})
+
+{rag_context}
+
+[출력 형식]
+- 최상위 제목(#), 원국 표, 형식 인사·진행 멘트 없이 곧장 본문으로 시작합니다.
+- 첫 문장: 이 사람이 돈과 일에서 반복적으로 겪는 경험을 한 줄로 짚는 문장으로 시작. 독자가 읽자마자 "맞아"라고 느낄 수 있게.
+- 섹션 순서:
+  1) ## 재물 성향 — 이 사람이 돈을 대하는 방식, 재물이 들어오고 나가는 패턴
+  2) ## 잘 맞는 돈 버는 방식 — 적성에 맞는 커리어·수익 방향, 혼자 vs 협업, 직장 vs 사업
+  3) ## 반복되는 패턴 — 돈에서 자꾸 겪는 상황, 무의식적으로 반복하는 실수나 손실 패턴
+  4) ## 지금 이 시기 재물운 — {current_year}년 흐름과 주목할 만한 타이밍
+  5) ## 이렇게 해보세요 — 실천 가능한 행동 `- [ ]` 4~6개
+- 마지막: 소제목 없이, 따뜻하고 기억에 남는 한 문장으로 마무리.

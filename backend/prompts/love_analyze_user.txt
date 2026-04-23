@@ -1,0 +1,22 @@
+다음 사주의 연애 분석을 작성하세요. 기준 연도: {current_year}년.
+
+생년월일시: {birth_info} / 성별: {gender}
+- 연령(기준일 {reference_date_iso}): 만 {age_international}세, 세는 나이 {age_korean}세.
+
+- 년주: {year_korean} ({year_stem}{year_branch})
+- 월주: {month_korean} ({month_stem}{month_branch})
+- 일주: {day_korean} ({day_stem}{day_branch})
+- 시주: {hour_korean} ({hour_stem}{hour_branch})
+
+{rag_context}
+
+[출력 형식]
+- 최상위 제목(#), 원국 표, 형식 인사·진행 멘트 없이 곧장 본문으로 시작합니다.
+- 첫 문장: 이 사람의 연애 핵심을 한 줄로 짚는 문장으로 시작. 독자가 읽자마자 "맞아"라고 느낄 수 있게.
+- 섹션 순서:
+  1) ## 연애 성향 — 이 사람만의 연애 방식, 감정 표현, 매력 포인트
+  2) ## 잘 맞는 상대 — 잘 통하는 스타일과 피하면 좋은 스타일
+  3) ## 반복되는 패턴 — 연애에서 자꾸 겪는 상황, 무의식적으로 반복하는 것들
+  4) ## 지금 이 시기 연애운 — {current_year}년 흐름과 인연이 올 만한 타이밍
+  5) ## 이렇게 해보세요 — 실천 가능한 행동 `- [ ]` 4~6개
+- 마지막: 소제목 없이, 따뜻하고 기억에 남는 한 문장으로 마무리.

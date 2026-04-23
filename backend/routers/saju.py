@@ -201,9 +201,18 @@ async def analyze_saju(req: SajuRequest):
     four_pillars = calculate_four_pillars(req)
 
     birth_info = f"{solar_year}년 {solar_month}월 {solar_day}일 {req.hour}시 {req.minute}분{lunar_info}"
-    rag_context = search_relevant_theory(four_pillars)
+    rag_context = search_relevant_theory(four_pillars, category=req.category)
     try:
-        analysis, summary = await analyze_with_llm(four_pillars, req.gender, birth_info, rag_context)
+        analysis, summary = await analyze_with_llm(
+            four_pillars,
+            req.gender,
+            solar_year,
+            solar_month,
+            solar_day,
+            birth_info,
+            rag_context,
+            category=req.category,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM 분석 실패: {str(e)}")
 
@@ -238,15 +247,14 @@ async def analyze_saju_stream(req: SajuRequest):
 
     four_pillars = calculate_four_pillars(req)
     birth_info = f"{solar_year}년 {solar_month}월 {solar_day}일 {req.hour}시 {req.minute}분{lunar_info}"
-    rag_context = search_relevant_theory(four_pillars)
+    rag_context = search_relevant_theory(four_pillars, category=req.category)
 
     def sse(event: str, data) -> str:
         # JSON 인코딩: delta에 \n\n 포함 시 SSE 파서 오작동 방지
         payload = json.dumps(data, ensure_ascii=False)
         return f"event: {event}\ndata: {payload}\n\n"
 
-    is_free = req.category == "free"
-    print(f"[REQ] category={req.category} model={'haiku' if is_free else 'sonnet'} birth={birth_info}", flush=True)
+    print(f"[REQ] category={req.category} birth={birth_info}", flush=True)
 
     async def event_stream():
         # 1) 원국 즉시 전송
@@ -255,7 +263,16 @@ async def analyze_saju_stream(req: SajuRequest):
         # 2) LLM 스트리밍
         full_text = ""
         try:
-            async for chunk in stream_with_llm(four_pillars, req.gender, birth_info, rag_context, free=is_free):
+            async for chunk in stream_with_llm(
+                four_pillars,
+                req.gender,
+                solar_year,
+                solar_month,
+                solar_day,
+                birth_info,
+                rag_context,
+                category=req.category,
+            ):
                 full_text += chunk
                 yield sse("delta", chunk)
         except Exception as e:
