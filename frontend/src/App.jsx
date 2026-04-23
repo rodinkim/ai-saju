@@ -31,11 +31,11 @@ const BRANCH_ELEMENT = {
   '午': '火', '申': '金', '酉': '金', '辰': '土', '戌': '土', '丑': '土', '未': '土',
 }
 const ELEMENT_META = {
-  '木': { color: '#4ade80', bg: 'rgba(74,222,128,0.1)',  border: 'rgba(74,222,128,0.35)',  label: '목·木' },
-  '火': { color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.35)', label: '화·火' },
-  '土': { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.35)',  label: '토·土' },
-  '金': { color: '#e2e8f0', bg: 'rgba(226,232,240,0.08)',border: 'rgba(226,232,240,0.25)', label: '금·金' },
-  '水': { color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.35)',  label: '수·水' },
+  '木': { color: '#3A7D4A', bg: '#EAF5ED', border: '#B8DCC2', label: '목·木' },
+  '火': { color: '#B84040', bg: '#FDEEED', border: '#F0BCBC', label: '화·火' },
+  '土': { color: '#A06020', bg: '#FDF3E4', border: '#E8CFA0', label: '토·土' },
+  '金': { color: '#606898', bg: '#EEEDF8', border: '#C0C4E0', label: '금·金' },
+  '水': { color: '#2E6898', bg: '#E8F2FA', border: '#A8CCEC', label: '수·水' },
 }
 const SHI_OPTIONS = [
   { label: '子(자)時  23:30 ~ 01:29', hour: 0,  minute: 30 },
@@ -51,6 +51,10 @@ const SHI_OPTIONS = [
   { label: '戌(술)時  19:30 ~ 21:29', hour: 20, minute: 30 },
   { label: '亥(해)時  21:30 ~ 23:29', hour: 22, minute: 30 },
 ]
+const YEAR_OPTIONS = Array.from({ length: 2010 - 1940 + 1 }, (_, i) => 2010 - i)
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1)
+function getDaysInMonth(year, month) { return new Date(year, month, 0).getDate() }
+
 const initialForm = { year: 1992, month: 8, day: 26, shiIndex: 9, gender: 'male', calendar_type: 'solar', is_leap_month: false }
 
 function ElementBadge({ char, elementMap }) {
@@ -190,9 +194,16 @@ export default function App() {
                : ['year', 'month', 'day', 'shiIndex'].includes(name) ? Number(value)
                : value,
       }
-      // 양력으로 바꾸면 윤달 초기화
       if (name === 'calendar_type' && value === 'solar') {
         updated.is_leap_month = false
+      }
+      // 연/월 변경 시 선택한 일이 해당 월 최대치를 초과하면 보정
+      if (name === 'year' || name === 'month') {
+        const maxDay = getDaysInMonth(
+          name === 'year' ? Number(value) : prev.year,
+          name === 'month' ? Number(value) : prev.month,
+        )
+        if (updated.day > maxDay) updated.day = maxDay
       }
       return updated
     })
@@ -303,17 +314,29 @@ export default function App() {
               <div className="date-grid">
                 <div className="field field-year">
                   <label>연도</label>
-                  <input type="number" name="year" value={form.year} onChange={handleChange} min={1900} max={2100} />
+                  <select name="year" value={form.year} onChange={handleChange}>
+                    {YEAR_OPTIONS.map(y => (
+                      <option key={y} value={y}>{y}년</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="field">
                   <label>월</label>
-                  <input type="number" name="month" value={form.month} onChange={handleChange} min={1} max={12} />
+                  <select name="month" value={form.month} onChange={handleChange}>
+                    {MONTH_OPTIONS.map(m => (
+                      <option key={m} value={m}>{m}월</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="field">
                   <label>일</label>
-                  <input type="number" name="day" value={form.day} onChange={handleChange} min={1} max={31} />
+                  <select name="day" value={form.day} onChange={handleChange}>
+                    {Array.from({ length: getDaysInMonth(form.year, form.month) }, (_, i) => i + 1).map(d => (
+                      <option key={d} value={d}>{d}일</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="field">
+                <div className="field field-full">
                   <label>달력</label>
                   <select name="calendar_type" value={form.calendar_type} onChange={handleChange}>
                     <option value="solar">양력</option>

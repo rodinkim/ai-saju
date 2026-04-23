@@ -1,46 +1,48 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --gold:       #c9a95a;
-  --gold-dim:   #8a7240;
-  --gold-glow:  rgba(201,169,90,0.18);
-  --bg:         #07070d;
-  --surface:    rgba(255,255,255,0.04);
-  --surface-2:  rgba(255,255,255,0.07);
-  --border:     rgba(201,169,90,0.18);
-  --border-2:   rgba(255,255,255,0.07);
-  --text:       #a89f8f;
-  --text-h:     #f0ece4;
-  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --bg:            #FAF7F2;
+  --bg-alt:        #F2EDE4;
+  --surface:       #FFFFFF;
+  --surface-2:     #F8F4EE;
+  --border:        #E8E0D4;
+  --border-2:      #EEE8DF;
 
-  font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
-  font-size: 18px;
+  --text:          #4A3B30;
+  --text-h:        #1C1008;
+  --text-sub:      #7A6659;
+  --text-muted:    #B0A090;
+
+  --rose:          #C07855;
+  --rose-dark:     #9D6040;
+  --rose-light:    #F8EAE0;
+  --rose-glow:     rgba(192, 120, 85, 0.12);
+  --rose-border:   rgba(192, 120, 85, 0.28);
+
+  --lavender:      #9080BE;
+  --lavender-light:#EDE8F8;
+
+  --shadow-sm:  0 1px 4px rgba(50,25,10,0.07), 0 1px 2px rgba(50,25,10,0.04);
+  --shadow-md:  0 4px 20px rgba(50,25,10,0.09), 0 2px 8px rgba(50,25,10,0.05);
+  --shadow-lg:  0 8px 36px rgba(50,25,10,0.11), 0 4px 14px rgba(50,25,10,0.07);
+
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+  font-size: 16px;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   word-break: keep-all;
 }
 
-body { margin: 0; min-height: 100svh; }
+body { margin: 0; min-height: 100svh; background: var(--bg); }
 
 #root {
   width: 100%;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  position: relative;
-}
-
-/* 배경 그레인 + 그라디언트 */
-#root::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,169,90,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 80% 80%, rgba(201,169,90,0.04) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
 }
 
 p { line-height: 1.8; }
