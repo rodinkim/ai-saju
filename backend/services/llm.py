@@ -22,7 +22,7 @@ def _load(filename: str) -> str:
 
 def _category_prompt_files(category: str) -> tuple[str, str, str | None]:
     if category == "love":
-        return "love_analyze_user.txt", "love_system.txt", "love_prefill.txt"
+        return "love_analyze_user.txt", "love_system.txt", None
     return "wealth_analyze_user.txt", "wealth_system.txt", None
 
 
