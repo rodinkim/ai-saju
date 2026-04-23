@@ -20,10 +20,10 @@ def _load(filename: str) -> str:
     return (PROMPTS_DIR / filename).read_text(encoding="utf-8")
 
 
-def _category_prompt_files(category: str) -> tuple[str, str]:
+def _category_prompt_files(category: str) -> tuple[str, str, str | None]:
     if category == "love":
-        return "love_analyze_user.txt", "love_system.txt"
-    return "wealth_analyze_user.txt", "wealth_system.txt"
+        return "love_analyze_user.txt", "love_system.txt", "love_prefill.txt"
+    return "wealth_analyze_user.txt", "wealth_system.txt", None
 
 
 def _international_age(birth_year: int, birth_month: int, birth_day: int, ref: date) -> int:
@@ -95,9 +95,10 @@ async def analyze_with_llm(
     category: str = "wealth",
 ) -> tuple[str, str]:
     """사주 분석. Returns: (analysis, summary)"""
-    user_prompt, system_prompt = _category_prompt_files(category)
+    user_prompt, system_prompt, prefill_file = _category_prompt_files(category)
     user_template = _load(user_prompt)
     system_text = _load(system_prompt)
+    prefill = _load(prefill_file) if prefill_file else None
 
     user_message = _build_user_message(
         user_template,
@@ -109,6 +110,10 @@ async def analyze_with_llm(
         birth_month,
         birth_day,
     )
+    messages = [{"role": "user", "content": user_message}]
+    if prefill:
+        messages.append({"role": "assistant", "content": prefill})
+
     print(f"[LLM] 요청 | model={MODEL} | prompt={len(user_message)}자 | rag={len(rag_context)}자", flush=True)
 
     t0 = time.perf_counter()
@@ -116,7 +121,7 @@ async def analyze_with_llm(
         model=MODEL,
         max_tokens=MAX_TOKENS,
         system=system_text,
-        messages=[{"role": "user", "content": user_message}],
+        messages=messages,
     )
     elapsed = time.perf_counter() - t0
     print(
@@ -138,9 +143,10 @@ async def stream_with_llm(
     category: str = "wealth",
 ) -> AsyncIterator[str]:
     """사주 스트리밍 분석 (category: wealth / love)."""
-    user_file, system_file = _category_prompt_files(category)
+    user_file, system_file, prefill_file = _category_prompt_files(category)
     user_template = _load(user_file)
     system = _load(system_file)
+    prefill = _load(prefill_file) if prefill_file else None
 
     user_message = _build_user_message(
         user_template,
@@ -152,6 +158,10 @@ async def stream_with_llm(
         birth_month,
         birth_day,
     )
+    messages = [{"role": "user", "content": user_message}]
+    if prefill:
+        messages.append({"role": "assistant", "content": prefill})
+
     print(f"[LLM] 스트림 요청 | model={MODEL} | prompt={len(user_message)}자 | rag={len(rag_context)}자", flush=True)
 
     t0 = time.perf_counter()
@@ -161,7 +171,7 @@ async def stream_with_llm(
         model=MODEL,
         max_tokens=MAX_TOKENS,
         system=system,
-        messages=[{"role": "user", "content": user_message}],
+        messages=messages,
     ) as stream:
         async for delta in stream.text_stream:
             if ttft is None:
