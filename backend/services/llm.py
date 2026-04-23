@@ -1,29 +1,62 @@
 import os
 import re
+import time
 from datetime import date
 from pathlib import Path
 from typing import AsyncIterator
 from anthropic import AsyncAnthropic
-from dotenv import load_dotenv
-from schemas.saju import FourPillars, Gender
 
-load_dotenv()
+import settings
+from schemas.saju import FourPillars, Gender
 
 client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
-FREE_MODEL = "claude-haiku-4-5-20251001"
+MODEL = settings.get_llm_model()
+MAX_TOKENS = 6000
 
 def _load(filename: str) -> str:
     return (PROMPTS_DIR / filename).read_text(encoding="utf-8")
 
 
-def _build_user_message(template: str, fp: FourPillars, gender: Gender, birth_info: str, rag_context: str) -> str:
+def _category_prompt_files(category: str) -> tuple[str, str]:
+    if category == "love":
+        return "love_analyze_user.txt", "love_system.txt"
+    return "wealth_analyze_user.txt", "wealth_system.txt"
+
+
+def _international_age(birth_year: int, birth_month: int, birth_day: int, ref: date) -> int:
+    """만 나이 (양력 생일 기준, ref 날짜 시점)."""
+    age = ref.year - birth_year
+    if (ref.month, ref.day) < (birth_month, birth_day):
+        age -= 1
+    return max(0, age)
+
+
+def _year_counting_age(birth_year: int, ref: date) -> int:
+    """세는 나이(연 나이, 양력 연도 기준: ref.year - birth_year + 1)."""
+    return ref.year - birth_year + 1
+
+
+def _build_user_message(
+    template: str,
+    fp: FourPillars,
+    gender: Gender,
+    birth_info: str,
+    rag_context: str,
+    birth_year: int,
+    birth_month: int,
+    birth_day: int,
+) -> str:
+    ref = date.today()
     return template.format(
         birth_info=birth_info,
         gender="남성" if gender == Gender.male else "여성",
-        current_year=date.today().year,
+        current_year=ref.year,
+        reference_date_iso=ref.isoformat(),
+        age_international=_international_age(birth_year, birth_month, birth_day, ref),
+        age_korean=_year_counting_age(birth_year, ref),
         year_korean=fp.year_pillar.korean,   year_stem=fp.year_pillar.heavenly_stem,   year_branch=fp.year_pillar.earthly_branch,
         month_korean=fp.month_pillar.korean, month_stem=fp.month_pillar.heavenly_stem, month_branch=fp.month_pillar.earthly_branch,
         day_korean=fp.day_pillar.korean,     day_stem=fp.day_pillar.heavenly_stem,     day_branch=fp.day_pillar.earthly_branch,
@@ -54,25 +87,42 @@ def _parse_analysis(full_text: str) -> tuple[str, str]:
 async def analyze_with_llm(
     four_pillars: FourPillars,
     gender: Gender,
+    birth_year: int,
+    birth_month: int,
+    birth_day: int,
     birth_info: str,
     rag_context: str = "",
-    category: str = "free",
+    category: str = "wealth",
 ) -> tuple[str, str]:
     """사주 분석. Returns: (analysis, summary)"""
-    user_prompt = "analyze_user.txt"
-    system_prompt = "system.txt"
-    if category == "wealth":
-        user_prompt = "wealth_analyze_user.txt"
-        system_prompt = "wealth_system.txt"
+    user_prompt, system_prompt = _category_prompt_files(category)
+    user_template = _load(user_prompt)
+    system_text = _load(system_prompt)
 
     user_message = _build_user_message(
-        _load(user_prompt), four_pillars, gender, birth_info, rag_context
+        user_template,
+        four_pillars,
+        gender,
+        birth_info,
+        rag_context,
+        birth_year,
+        birth_month,
+        birth_day,
     )
+    print(f"[LLM] 요청 | model={MODEL} | prompt={len(user_message)}자 | rag={len(rag_context)}자", flush=True)
+
+    t0 = time.perf_counter()
     message = await client.messages.create(
-        model=FREE_MODEL,
-        max_tokens=4096,
-        system=_load(system_prompt),
+        model=MODEL,
+        max_tokens=MAX_TOKENS,
+        system=system_text,
         messages=[{"role": "user", "content": user_message}],
+    )
+    elapsed = time.perf_counter() - t0
+    print(
+        f"[LLM] 완료 | {elapsed:.2f}s | stop={message.stop_reason}"
+        f" | in={message.usage.input_tokens} out={message.usage.output_tokens} tokens",
+        flush=True,
     )
     return _parse_analysis(message.content[0].text)
 
@@ -80,48 +130,51 @@ async def analyze_with_llm(
 async def stream_with_llm(
     four_pillars: FourPillars,
     gender: Gender,
+    birth_year: int,
+    birth_month: int,
+    birth_day: int,
     birth_info: str,
     rag_context: str = "",
-    free: bool = False,
-    category: str = "free",
+    category: str = "wealth",
 ) -> AsyncIterator[str]:
-    """
-    사주 스트리밍 분석.
-    free=True  → 무료사주 프롬프트 + Haiku
-    free=False → 일반/재물 프롬프트 + Haiku
-    """
-    if free:
-        system = _load("free_system.txt")
-        user_message = _build_user_message(
-            _load("free_analyze_user.txt"), four_pillars, gender, birth_info, rag_context
-        )
-        model = FREE_MODEL
-        max_tokens = 4096
-    elif category == "wealth":
-        system = _load("wealth_system.txt")
-        user_message = _build_user_message(
-            _load("wealth_analyze_user.txt"), four_pillars, gender, birth_info, rag_context
-        )
-        model = FREE_MODEL
-        max_tokens = 4096
-    else:
-        system = _load("system.txt")
-        user_message = _build_user_message(
-            _load("analyze_user.txt"), four_pillars, gender, birth_info, rag_context
-        )
-        model = FREE_MODEL
-        max_tokens = 4096
+    """사주 스트리밍 분석 (category: wealth / love)."""
+    user_file, system_file = _category_prompt_files(category)
+    user_template = _load(user_file)
+    system = _load(system_file)
+
+    user_message = _build_user_message(
+        user_template,
+        four_pillars,
+        gender,
+        birth_info,
+        rag_context,
+        birth_year,
+        birth_month,
+        birth_day,
+    )
+    print(f"[LLM] 스트림 요청 | model={MODEL} | prompt={len(user_message)}자 | rag={len(rag_context)}자", flush=True)
+
+    t0 = time.perf_counter()
+    ttft: float | None = None
 
     async with client.messages.stream(
-        model=model,
-        max_tokens=max_tokens,
+        model=MODEL,
+        max_tokens=MAX_TOKENS,
         system=system,
         messages=[{"role": "user", "content": user_message}],
     ) as stream:
         async for delta in stream.text_stream:
+            if ttft is None:
+                ttft = time.perf_counter() - t0
             yield delta
         try:
             final = await stream.get_final_message()
-            print(f"[LLM] model={model} | stop={final.stop_reason} | in={final.usage.input_tokens} out={final.usage.output_tokens} tokens")
+            total = time.perf_counter() - t0
+            print(
+                f"[LLM] 스트림 완료 | 총 {total:.2f}s (TTFT {ttft:.2f}s)"
+                f" | stop={final.stop_reason}"
+                f" | in={final.usage.input_tokens} out={final.usage.output_tokens} tokens",
+                flush=True,
+            )
         except Exception as e:
             print(f"[LLM] get_final_message 실패: {e}")

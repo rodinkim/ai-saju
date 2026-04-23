@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import './Home.css'
 
 const CATEGORIES = [
-  { id: 'free',   title: '무료 사주', image: '/images/무료/무료사주.webp', icon: '🎁', ratio: '7 / 10' },
   { id: 'wealth', title: '재물 사주', image: '/images/재물/재물사주.webp', icon: '💰', ratio: '7 / 10' },
   { id: 'love',   title: '연애 사주', image: '/images/연애/연애사주.webp', icon: '💕', ratio: '7 / 10' },
 ]
