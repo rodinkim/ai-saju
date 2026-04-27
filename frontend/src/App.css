@@ -37,11 +37,13 @@
   gap: 8px;
 }
 .hero-deco {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--rose);
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 .hero-title {
   font-size: 32px;
@@ -75,10 +77,9 @@
 }
 
 .form-section-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -112,6 +113,13 @@
   cursor: pointer;
 }
 
+.field-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: -4px 0 8px;
+  letter-spacing: 0.01em;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -120,9 +128,8 @@
 .field label {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
-  text-transform: uppercase;
 }
 .field input,
 .field select {
@@ -295,10 +302,9 @@
 
 .result-label {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -363,9 +369,9 @@
 }
 
 .pillar-elem {
-  font-size: 9px;
+  font-size: 11px;
   opacity: 0.65;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 
 .pillar-korean {
@@ -414,7 +420,7 @@
 .highlight-weakened { opacity: 0.6; }
 
 .highlight-emoji {
-  font-size: 24px;
+  font-size: 20px;
   flex-shrink: 0;
   line-height: 1;
 }

@@ -34,22 +34,22 @@ const ELEMENT_META = {
   '木': { color: '#3A8A50', bg: '#F0FAF2', border: '#C4E8CE', label: '목·木' },
   '火': { color: '#C04848', bg: '#FEF0EF', border: '#F4C4C0', label: '화·火' },
   '土': { color: '#B06828', bg: '#FEF6EB', border: '#EDD8B0', label: '토·土' },
-  '金': { color: '#6868A8', bg: '#F2F0FA', border: '#CACAE8', label: '금·金' },
+  '金': { color: '#5A6878', bg: '#F0F2F4', border: '#C8D0D8', label: '금·金' },
   '水': { color: '#3878B0', bg: '#EEF4FC', border: '#B4D0EE', label: '수·水' },
 }
 const SHI_OPTIONS = [
-  { label: '子(자)時  23:30 ~ 01:29', hour: 0,  minute: 30 },
-  { label: '丑(축)時  01:30 ~ 03:29', hour: 2,  minute: 30 },
-  { label: '寅(인)時  03:30 ~ 05:29', hour: 4,  minute: 30 },
-  { label: '卯(묘)時  05:30 ~ 07:29', hour: 6,  minute: 30 },
-  { label: '辰(진)時  07:30 ~ 09:29', hour: 8,  minute: 30 },
-  { label: '巳(사)時  09:30 ~ 11:29', hour: 10, minute: 30 },
-  { label: '午(오)時  11:30 ~ 13:29', hour: 12, minute: 30 },
-  { label: '未(미)時  13:30 ~ 15:29', hour: 14, minute: 30 },
-  { label: '申(신)時  15:30 ~ 17:29', hour: 16, minute: 30 },
-  { label: '酉(유)時  17:30 ~ 19:29', hour: 18, minute: 30 },
-  { label: '戌(술)時  19:30 ~ 21:29', hour: 20, minute: 30 },
-  { label: '亥(해)時  21:30 ~ 23:29', hour: 22, minute: 30 },
+  { label: '자시 · 23:30 ~ 01:29', hour: 0,  minute: 30 },
+  { label: '축시 · 01:30 ~ 03:29', hour: 2,  minute: 30 },
+  { label: '인시 · 03:30 ~ 05:29', hour: 4,  minute: 30 },
+  { label: '묘시 · 05:30 ~ 07:29', hour: 6,  minute: 30 },
+  { label: '진시 · 07:30 ~ 09:29', hour: 8,  minute: 30 },
+  { label: '사시 · 09:30 ~ 11:29', hour: 10, minute: 30 },
+  { label: '오시 · 11:30 ~ 13:29', hour: 12, minute: 30 },
+  { label: '미시 · 13:30 ~ 15:29', hour: 14, minute: 30 },
+  { label: '신시 · 15:30 ~ 17:29', hour: 16, minute: 30 },
+  { label: '유시 · 17:30 ~ 19:29', hour: 18, minute: 30 },
+  { label: '술시 · 19:30 ~ 21:29', hour: 20, minute: 30 },
+  { label: '해시 · 21:30 ~ 23:29', hour: 22, minute: 30 },
 ]
 const YEAR_OPTIONS = Array.from({ length: 2010 - 1940 + 1 }, (_, i) => 2010 - i)
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -269,7 +269,7 @@ export default function App() {
           정밀 명리 분석
         </div>
         <h1 className="hero-title">
-          {category ? <>{category.title}<br /><span>사주 분석</span></> : <>사주<span>팔자</span><br />명리 분석</>}
+          {category ? <>{category.title}<br /><span>명리 분석</span></> : <>사주<span>팔자</span><br />명리 분석</>}
         </h1>
         <p className="hero-sub">
           {category?.sub ?? '생년월일시를 입력하면 오행 분포와 용신을 분석하고 깊이 있는 운명 해석을 제공합니다'}
@@ -335,6 +335,7 @@ export default function App() {
               <div className="form-section-label">
                 <iconify-icon icon="solar:clock-circle-bold-duotone" />  태어난 시
               </div>
+              <p className="field-hint">출생 시간대를 선택해주세요 · 정확하지 않으면 가장 가까운 시간대로</p>
               <div className="field">
                 <select name="shiIndex" value={form.shiIndex} onChange={handleChange}>
                   {SHI_OPTIONS.map((s, i) => (
