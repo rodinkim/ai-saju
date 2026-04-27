@@ -266,7 +266,7 @@ export default function App() {
       <div className="hero">
         <div className="hero-deco">
           <iconify-icon icon="solar:stars-bold-duotone" style={{ color: 'var(--gold-dim)' }} />
-          명리학 기반 AI 분석
+          정밀 명리 분석
         </div>
         <h1 className="hero-title">
           {category ? <>{category.title}<br /><span>사주 분석</span></> : <>사주<span>팔자</span><br />명리 분석</>}

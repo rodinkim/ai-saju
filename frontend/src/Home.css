@@ -23,10 +23,9 @@
 }
 
 .home-brand {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   color: var(--rose);
 }
 

@@ -85,7 +85,7 @@ export default function Home() {
           )}
         </div>
         <h1 className="home-title">오늘, 무엇이<br /><em>궁금하세요?</em></h1>
-        <p className="home-sub">AI 명리학으로 나를 더 깊이 이해해보세요</p>
+        <p className="home-sub">명리학으로 나를 더 깊이 이해해보세요</p>
       </header>
 
       {!user && (
@@ -125,7 +125,7 @@ export default function Home() {
         ))}
       </div>
 
-      <p className="home-footer">토정 · 생년월일시 기반 AI 명리 분석</p>
+      <p className="home-footer">토정 · 생년월일시 기반 명리 분석</p>
 
     </div>
 
