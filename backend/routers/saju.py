@@ -1,11 +1,15 @@
 import json
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from korean_lunar_calendar import KoreanLunarCalendar
+from sqlalchemy.orm import Session
 from schemas.saju import SajuRequest, SajuResponse, CalendarType, FourPillars, Pillar, SinsalItem, GwiinItem
 from services.llm import analyze_with_llm, stream_with_llm, _parse_analysis
 from services.rag import search_relevant_theory
 from services.sinsal import calculate_gwiin_sinsal
+from database import get_db
+from models.user import User
+from routers.auth import require_current_user
 
 router = APIRouter(prefix="/api/saju", tags=["사주 분석"])
 
@@ -224,7 +228,11 @@ async def analyze_saju(req: SajuRequest):
 
 
 @router.post("/analyze/stream")
-async def analyze_saju_stream(req: SajuRequest):
+async def analyze_saju_stream(
+    req: SajuRequest,
+    current_user: User = Depends(require_current_user),
+    db: Session = Depends(get_db),
+):
     """
     사주팔자 스트리밍 분석 (SSE).
     이벤트 타입:
@@ -233,7 +241,13 @@ async def analyze_saju_stream(req: SajuRequest):
       done    — 완료 신호 + summary
       error   — 오류 메시지
     """
-    print(f"[STREAM] 함수 진입 year={req.year} category={req.category}", flush=True)
+    if current_user.credits < 10:
+        raise HTTPException(status_code=402, detail="크레딧이 부족합니다. 충전 후 이용해주세요.")
+
+    current_user.credits -= 10
+    db.commit()
+
+    print(f"[STREAM] 함수 진입 year={req.year} category={req.category} user={current_user.id} credits_left={current_user.credits}", flush=True)
     solar_year, solar_month, solar_day = req.year, req.month, req.day
     lunar_info = ""
 

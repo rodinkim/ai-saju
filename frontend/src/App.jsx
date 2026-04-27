@@ -31,11 +31,11 @@ const BRANCH_ELEMENT = {
   '午': '火', '申': '金', '酉': '金', '辰': '土', '戌': '土', '丑': '土', '未': '土',
 }
 const ELEMENT_META = {
-  '木': { color: '#3A7D4A', bg: '#EAF5ED', border: '#B8DCC2', label: '목·木' },
-  '火': { color: '#B84040', bg: '#FDEEED', border: '#F0BCBC', label: '화·火' },
-  '土': { color: '#A06020', bg: '#FDF3E4', border: '#E8CFA0', label: '토·土' },
-  '金': { color: '#606898', bg: '#EEEDF8', border: '#C0C4E0', label: '금·金' },
-  '水': { color: '#2E6898', bg: '#E8F2FA', border: '#A8CCEC', label: '수·水' },
+  '木': { color: '#3A8A50', bg: '#F0FAF2', border: '#C4E8CE', label: '목·木' },
+  '火': { color: '#C04848', bg: '#FEF0EF', border: '#F4C4C0', label: '화·火' },
+  '土': { color: '#B06828', bg: '#FEF6EB', border: '#EDD8B0', label: '토·土' },
+  '金': { color: '#6868A8', bg: '#F2F0FA', border: '#CACAE8', label: '금·金' },
+  '水': { color: '#3878B0', bg: '#EEF4FC', border: '#B4D0EE', label: '수·水' },
 }
 const SHI_OPTIONS = [
   { label: '子(자)時  23:30 ~ 01:29', hour: 0,  minute: 30 },
@@ -67,105 +67,69 @@ function ElementBadge({ char, elementMap }) {
   )
 }
 
-// 신살 유형 분류
-const SINSAL_KIND = {
-  // 관심도가 높은 살(하이라이트)
-  '도화살': 'focus', '장성살': 'focus', '반안살': 'focus',
-  // 일반
-  '역마살': 'jung', '화개살': 'jung', '지살': 'jung',
-  // 주의(저채도)
-  '겁살': 'hyung', '재살': 'hyung', '천살': 'hyung',
-  '월살': 'hyung', '망신살': 'hyung', '육해살': 'hyung',
-  '양인살': 'hyung', '공망': 'hyung',
+const SINSAL_META = {
+  '도화살': { emoji: '🌸', desc: '이성에게 매력적', type: 'focus' },
+  '장성살': { emoji: '🛡️', desc: '강한 추진력',     type: 'focus' },
+  '반안살': { emoji: '🔮', desc: '뛰어난 통찰력',   type: 'focus' },
+  '역마살': { emoji: '🌿', desc: '활발한 변동·이동', type: 'jung'  },
+  '화개살': { emoji: '🎨', desc: '예술적 감수성',   type: 'jung'  },
+  '지살':   { emoji: '🌱', desc: '새로운 시작',     type: 'jung'  },
+  '겁살':   { emoji: '⚡', desc: '강한 에너지',     type: 'hyung' },
+  '양인살': { emoji: '🗡️', desc: '날카로운 기운',   type: 'hyung' },
+  '망신살': { emoji: '🌀', desc: '주의가 필요',     type: 'hyung' },
 }
 
-const SINSAL_PRIORITY = { focus: 0, gil: 1, jung: 2, hyung: 3 }
-
-function ExtrasSection({ gwiin, gwiinDetails, sinsal, wealthMode }) {
-  if (!gwiin?.length && !sinsal?.length) return null
-  const pillarOrder = ['년', '월', '일', '시']
-  const groupedSinsal = pillarOrder
-    .map((pillar) => ({
-      pillar,
-      items: (sinsal ?? [])
-        .filter((item) => item.pillar === pillar)
-        .sort((a, b) => {
-          const aKind = SINSAL_KIND[a.name] ?? 'jung'
-          const bKind = SINSAL_KIND[b.name] ?? 'jung'
-          const aPriority = SINSAL_PRIORITY[aKind] ?? 99
-          const bPriority = SINSAL_PRIORITY[bKind] ?? 99
-          if (aPriority !== bPriority) return aPriority - bPriority
-          return a.name.localeCompare(b.name, 'ko')
-        }),
-    }))
-    .filter((group) => group.items.length > 0)
-
-  const body = (
-    <div className="extras-section">
-      {gwiin?.length > 0 && (
-        <div className="extras-row">
-          <span className="extras-label">귀인</span>
-          <div className="extras-tags">
-            {(gwiinDetails?.length ? gwiinDetails : gwiin.map((name) => ({ name })) ).map((item, i) => (
-              <span key={`${item.name}-${item.basis ?? 'none'}-${i}`} className={`extras-tag extras-tag-gwiin${item.weakened ? ' extras-tag-weakened' : ''}`}>
-                {item.name}
-                {item.basis ? <span className="extras-pillar-label">({item.basis})</span> : null}
-                {item.weakened ? <span className="extras-pillar-label">(약화:{item.weaken_reason})</span> : null}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      {sinsal?.length > 0 && (
-        <div className="extras-row extras-row-sinsal">
-          <span className="extras-label">신살</span>
-          <div className="extras-sinsal-groups">
-            {groupedSinsal.map((group) => (
-              <div key={group.pillar} className="extras-sinsal-group">
-                <span className="extras-sinsal-group-title">{group.pillar}주</span>
-                <div className="extras-tags">
-                  {group.items.map((item, i) => (
-                    <span key={`${group.pillar}-${item.name}-${item.basis ?? 'none'}-${i}`} className={`extras-tag extras-tag-sinsal-${SINSAL_KIND[item.name] ?? 'jung'}`}>
-                      {item.name}
-                      <span className="extras-pillar-label">
-                        ({item.basis ?? '기준없음'})
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+function ExtrasSection({ gwiin, gwiinDetails, sinsal }) {
+  const gwiinItems = (gwiinDetails?.length
+    ? gwiinDetails
+    : (gwiin ?? []).map(name => ({ name }))
   )
 
-  if (wealthMode) {
-    return (
-      <details className="extras-details extras-details-wealth">
-        <summary className="extras-details-summary">귀인·신살 참고</summary>
-        {body}
-      </details>
-    )
-  }
+  const sinsalCards = (sinsal ?? [])
+    .filter(s => SINSAL_META[s.name])
+    .map(s => ({ ...SINSAL_META[s.name], name: s.name, pillar: s.pillar }))
 
-  return body
+  if (!gwiinItems.length && !sinsalCards.length) return null
+
+  return (
+    <div className="highlight-grid">
+      {gwiinItems.map((item, i) => (
+        <div key={i} className={`highlight-card highlight-gwiin${item.weakened ? ' highlight-weakened' : ''}`}>
+          <span className="highlight-emoji">⭐</span>
+          <div className="highlight-info">
+            <span className="highlight-name">{item.name}</span>
+            <span className="highlight-desc">{item.basis ? `${item.basis} 기준` : '귀인의 도움'}</span>
+          </div>
+        </div>
+      ))}
+      {sinsalCards.map((card, i) => (
+        <div key={i} className={`highlight-card highlight-${card.type}`}>
+          <span className="highlight-emoji">{card.emoji}</span>
+          <div className="highlight-info">
+            <span className="highlight-name">{card.name}</span>
+            <span className="highlight-desc">{card.desc}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function PillarCard({ label, pillar }) {
+  const stemMeta   = ELEMENT_META[STEM_ELEMENT[pillar.heavenly_stem]]   || {}
+  const branchMeta = ELEMENT_META[BRANCH_ELEMENT[pillar.earthly_branch]] || {}
   return (
-    <div className="pillar-outer">
-      <div className="pillar-inner">
-        <div className="pillar-card">
-          <div className="pillar-title">{label}</div>
-          <div className="pillar-badges">
-            <ElementBadge char={pillar.heavenly_stem} elementMap={STEM_ELEMENT} />
-            <ElementBadge char={pillar.earthly_branch} elementMap={BRANCH_ELEMENT} />
-          </div>
-          <div className="pillar-korean">{pillar.korean}</div>
-        </div>
+    <div className="pillar-card">
+      <div className="pillar-label">{label}</div>
+      <div className="pillar-cell" style={{ color: stemMeta.color, background: stemMeta.bg, borderColor: stemMeta.border }}>
+        <span className="pillar-char">{pillar.heavenly_stem}</span>
+        <span className="pillar-elem">{stemMeta.label}</span>
       </div>
+      <div className="pillar-cell" style={{ color: branchMeta.color, background: branchMeta.bg, borderColor: branchMeta.border }}>
+        <span className="pillar-char">{pillar.earthly_branch}</span>
+        <span className="pillar-elem">{branchMeta.label}</span>
+      </div>
+      <div className="pillar-korean">{pillar.korean}</div>
     </div>
   )
 }
@@ -184,6 +148,7 @@ export default function App() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [needsLogin, setNeedsLogin] = useState(false)
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -212,13 +177,17 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true); setError(null); setResult(null); setPillars(null); setStreamText('')
+    setLoading(true); setError(null); setNeedsLogin(false); setResult(null); setPillars(null); setStreamText('')
     try {
       const shi = SHI_OPTIONS[form.shiIndex]
       console.log('[Submit] 요청 시작 | URL:', API_URL, '| category:', category?.id ?? 'free', '| year:', form.year)
+      const token = localStorage.getItem('token')
       const res = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           year: form.year, month: form.month, day: form.day,
           hour: shi.hour, minute: shi.minute,
@@ -227,7 +196,12 @@ export default function App() {
           category: category?.id ?? 'wealth',
         }),
       })
-      if (!res.ok) { const d = await res.json(); throw new Error(d.detail || '분석 실패') }
+      if (!res.ok) {
+        const d = await res.json()
+        if (res.status === 401) { setNeedsLogin(true); setLoading(false); return }
+        if (res.status === 402) throw new Error('크레딧이 부족합니다. 충전 후 이용해주세요.')
+        throw new Error(d.detail || '분석 실패')
+      }
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -395,6 +369,22 @@ export default function App() {
         </div>
       </div>
 
+      {needsLogin && (
+        <div className="login-required-card">
+          <div className="login-required-icon">✦</div>
+          <div className="login-required-text">
+            <strong>소셜 로그인으로 3초면 돼요</strong>
+            <span>카카오 · 네이버 · 구글 중 편한 걸로</span>
+          </div>
+          <button
+            className="login-required-btn"
+            onClick={() => navigate('/', { state: { openLogin: true } })}
+          >
+            로그인하기
+          </button>
+        </div>
+      )}
+
       {error && <div className="error-box">{error}</div>}
 
       {pillars && (
@@ -405,16 +395,15 @@ export default function App() {
           </div>
 
           <div className="pillars">
-            <PillarCard label="시주 時柱" pillar={pillars.hour_pillar} />
-            <PillarCard label="일주 日柱" pillar={pillars.day_pillar} />
-            <PillarCard label="월주 月柱" pillar={pillars.month_pillar} />
-            <PillarCard label="년주 年柱" pillar={pillars.year_pillar} />
+            <PillarCard label="시주" pillar={pillars.hour_pillar} />
+            <PillarCard label="일주" pillar={pillars.day_pillar} />
+            <PillarCard label="월주" pillar={pillars.month_pillar} />
+            <PillarCard label="년주" pillar={pillars.year_pillar} />
           </div>
           <ExtrasSection
             gwiin={pillars.gwiin}
             gwiinDetails={pillars.gwiin_details}
             sinsal={pillars.sinsal}
-            wealthMode={!isLove}
           />
 
           {streamText && (
