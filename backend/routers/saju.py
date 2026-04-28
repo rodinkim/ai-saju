@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from korean_lunar_calendar import KoreanLunarCalendar
 from sqlalchemy.orm import Session
-from schemas.saju import SajuRequest, SajuResponse, CalendarType, FourPillars, Pillar, SinsalItem, GwiinItem
-from services.llm import analyze_with_llm, stream_with_llm, _parse_analysis
+from schemas.saju import SajuRequest, SajuResponse, CalendarType, FourPillars, Pillar, SinsalItem, GwiinItem, PersonInfo, RelationRequest, RelationResponse
+from services.llm import analyze_with_llm, stream_with_llm, stream_relation_with_llm, _parse_analysis
 from services.rag import search_relevant_theory
 from services.sinsal import calculate_gwiin_sinsal
 from database import get_db
@@ -307,4 +307,90 @@ async def analyze_saju_stream(
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
         },
+    )
+
+
+def _resolve_person(p: PersonInfo) -> tuple[FourPillars, int, int, int, str]:
+    """PersonInfo → (FourPillars, solar_year, solar_month, solar_day, birth_info)"""
+    solar_year, solar_month, solar_day = p.year, p.month, p.day
+    lunar_info = ""
+
+    if p.calendar_type == CalendarType.lunar:
+        solar_year, solar_month, solar_day = _lunar_to_solar(p.year, p.month, p.day, p.is_leap_month)
+        leap_str = "(윤달)" if p.is_leap_month else ""
+        lunar_info = f" [음력 {p.year}년 {p.month}월 {p.day}일{leap_str} → 양력 {solar_year}년 {solar_month}월 {solar_day}일]"
+
+    req = SajuRequest(
+        year=solar_year, month=solar_month, day=solar_day,
+        hour=p.hour, minute=p.minute,
+        gender=p.gender, category="wealth",
+    )
+    four_pillars = calculate_four_pillars(req)
+    birth_info = f"{solar_year}년 {solar_month}월 {solar_day}일 {p.hour}시 {p.minute}분{lunar_info}"
+    return four_pillars, solar_year, solar_month, solar_day, birth_info
+
+
+VALID_RELATION_CATEGORIES = {"couple", "family", "friendship"}
+
+
+@router.post("/relation/stream")
+async def relation_stream(
+    req: RelationRequest,
+    current_user: User = Depends(require_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    두 사람 관계 사주 스트리밍 분석 (SSE).
+    category: couple(궁합) / family(가족) / friendship(우정)
+    이벤트: pillars_a, pillars_b, delta, done, error
+    """
+    if req.category not in VALID_RELATION_CATEGORIES:
+        raise HTTPException(status_code=422, detail=f"category는 {VALID_RELATION_CATEGORIES} 중 하나여야 합니다.")
+
+    if current_user.credits < 10:
+        raise HTTPException(status_code=402, detail="크레딧이 부족합니다. 충전 후 이용해주세요.")
+
+    current_user.credits -= 10
+    db.commit()
+
+    fp_a, sy_a, sm_a, sd_a, bi_a = _resolve_person(req.person_a)
+    fp_b, sy_b, sm_b, sd_b, bi_b = _resolve_person(req.person_b)
+
+    rag_a = search_relevant_theory(fp_a, category=req.category)
+    rag_b = search_relevant_theory(fp_b, category=req.category)
+    rag_context = "\n".join(filter(None, [rag_a, rag_b]))
+
+    def sse(event: str, data) -> str:
+        return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+    async def event_stream():
+        yield sse("pillars_a", fp_a.model_dump())
+        yield sse("pillars_b", fp_b.model_dump())
+
+        full_text = ""
+        try:
+            async for chunk in stream_relation_with_llm(
+                fp_a, fp_b,
+                req.person_a.label, req.person_b.label,
+                req.person_a.gender, req.person_b.gender,
+                bi_a, bi_b,
+                sy_a, sm_a, sd_a,
+                sy_b, sm_b, sd_b,
+                rag_context,
+                category=req.category,
+            ):
+                full_text += chunk
+                yield sse("delta", chunk)
+        except Exception as e:
+            print(f"[ERR] 관계 LLM 스트리밍 실패: {e}")
+            yield sse("error", str(e))
+            return
+
+        analysis, summary = _parse_analysis(full_text)
+        yield sse("done", {"summary": summary})
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

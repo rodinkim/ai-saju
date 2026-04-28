@@ -8,6 +8,7 @@ import './App.css'
 const API_HOST = window.location.hostname || 'localhost'
 const API_URL = `http://${API_HOST}:8000/api/saju/analyze/stream`
 
+
 /** `node` / `rest`는 DOM에 넘기지 않음(Safari·React 경고로 스타일 무시 유발 가능). */
 const analysisMarkdownComponents = {
   strong: ({ node: _node, className, children }) => (
@@ -427,6 +428,7 @@ export default function App() {
               </div>
             </>
           )}
+
 
         </div>
       )}

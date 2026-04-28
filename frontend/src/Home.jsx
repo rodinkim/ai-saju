@@ -27,6 +27,33 @@ const CATEGORIES = [
   },
 ]
 
+const RELATION_CATEGORIES = [
+  {
+    id: 'couple',
+    title: '궁합',
+    sub: '두 사람의 기운이 어떻게 만나는지',
+    icon: '🪡',
+    gradient: 'linear-gradient(135deg, #FEF0F6 0%, #FAE8F0 100%)',
+    accent: '#B06080',
+  },
+  {
+    id: 'family',
+    title: '가족',
+    sub: '가족 사이의 기운과 관계 패턴',
+    icon: '🏔️',
+    gradient: 'linear-gradient(135deg, #EEF4FC 0%, #E8F0F8 100%)',
+    accent: '#4878A8',
+  },
+  {
+    id: 'friendship',
+    title: '우정',
+    sub: '친구 사이의 시너지와 어긋나는 지점',
+    icon: '🌱',
+    gradient: 'linear-gradient(135deg, #F0FAF2 0%, #E8F5EA 100%)',
+    accent: '#3A7A50',
+  },
+]
+
 export default function Home() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -99,6 +126,7 @@ export default function Home() {
         </button>
       )}
 
+      <div className="category-section-label">나의 사주</div>
       <div className="category-list">
         {CATEGORIES.map(cat => (
           <button
@@ -114,6 +142,27 @@ export default function Home() {
                 className="category-img"
                 onError={e => { e.currentTarget.style.display = 'none' }}
               />
+              <div className="category-img-fallback">{cat.icon}</div>
+            </div>
+            <div className="category-info">
+              <div className="category-title" style={{ color: cat.accent }}>{cat.title}</div>
+              <div className="category-sub">{cat.sub}</div>
+            </div>
+            <div className="category-arrow" style={{ color: cat.accent }}>›</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="category-section-label">두 사람 사주</div>
+      <div className="category-list">
+        {RELATION_CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            className="category-card category-card-relation"
+            style={{ background: cat.gradient }}
+            onClick={() => navigate('/relation', { state: { category: cat } })}
+          >
+            <div className="category-img-wrap">
               <div className="category-img-fallback">{cat.icon}</div>
             </div>
             <div className="category-info">

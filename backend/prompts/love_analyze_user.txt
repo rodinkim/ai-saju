@@ -1,4 +1,4 @@
-다음 사주의 연애 분석을 작성하세요. 기준 연도: {current_year}년.
+다음 사주의 연애 분석을 작성하세요. 기준 연도: {current_year}년({current_year_korean}년).
 
 생년월일시: {birth_info} / 성별: {gender}
 - 연령(기준일 {reference_date_iso}): 만 {age_international}세, 세는 나이 {age_korean}세.
