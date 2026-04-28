@@ -8,6 +8,14 @@ const API_BASE = `http://${API_HOST}:8000`
 
 const CATEGORIES = [
   {
+    id: 'fortune',
+    title: '올해 운세',
+    sub: '올해 나에게 어떤 기운이 오는지',
+    icon: '🌒',
+    gradient: 'linear-gradient(135deg, #F4EEF8 0%, #EAE0F5 100%)',
+    accent: '#8A60B0',
+  },
+  {
     id: 'love',
     title: '연애 사주',
     sub: '나의 연애 성향과 인연의 흐름',
@@ -24,6 +32,30 @@ const CATEGORIES = [
     gradient: 'linear-gradient(135deg, #FEF5E8 0%, #FAF0DC 100%)',
     accent: '#C07855',
     image: '/images/재물/재물사주.webp',
+  },
+  {
+    id: 'daewoon',
+    title: '대운 사주',
+    sub: '내 인생 전성기는 언제인가',
+    icon: '🌊',
+    gradient: 'linear-gradient(135deg, #EEF4FC 0%, #E0EDF8 100%)',
+    accent: '#3868A8',
+  },
+  {
+    id: 'pastlife',
+    title: '전생 사주',
+    sub: '전생에서 이번 생으로 가져온 것',
+    icon: '🌀',
+    gradient: 'linear-gradient(135deg, #F0EEF8 0%, #E4E0F5 100%)',
+    accent: '#6048A0',
+  },
+  {
+    id: 'vocation',
+    title: '천직 사주',
+    sub: '내가 타고난 진짜 직업의 방향',
+    icon: '✨',
+    gradient: 'linear-gradient(135deg, #FEFAE8 0%, #FAF3D0 100%)',
+    accent: '#A08030',
   },
 ]
 
@@ -136,12 +168,14 @@ export default function Home() {
             onClick={() => navigate('/analyze', { state: { category: cat } })}
           >
             <div className="category-img-wrap">
-              <img
-                src={cat.image}
-                alt={cat.title}
-                className="category-img"
-                onError={e => { e.currentTarget.style.display = 'none' }}
-              />
+              {cat.image && (
+                <img
+                  src={cat.image}
+                  alt={cat.title}
+                  className="category-img"
+                  onError={e => { e.currentTarget.style.display = 'none' }}
+                />
+              )}
               <div className="category-img-fallback">{cat.icon}</div>
             </div>
             <div className="category-info">

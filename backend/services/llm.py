@@ -27,9 +27,11 @@ def _load(filename: str) -> str:
     return (PROMPTS_DIR / filename).read_text(encoding="utf-8")
 
 
+_KNOWN_CATEGORIES = {"love", "wealth", "fortune", "pastlife", "vocation", "daewoon"}
+
 def _category_prompt_files(category: str) -> tuple[str, str, str | None]:
-    if category == "love":
-        return "love_analyze_user.txt", "love_system.txt", None
+    if category in _KNOWN_CATEGORIES:
+        return f"{category}_analyze_user.txt", f"{category}_system.txt", None
     return "wealth_analyze_user.txt", "wealth_system.txt", None
 
 
