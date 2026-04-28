@@ -9,6 +9,13 @@ from anthropic import AsyncAnthropic
 import settings
 from schemas.saju import FourPillars, Gender
 
+_STEMS_KR = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"]
+_BRANCHES_KR = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"]
+
+def _year_ganji(year: int) -> str:
+    offset = (year - 1984) % 60
+    return _STEMS_KR[offset % 10] + _BRANCHES_KR[offset % 12]
+
 client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
@@ -20,10 +27,16 @@ def _load(filename: str) -> str:
     return (PROMPTS_DIR / filename).read_text(encoding="utf-8")
 
 
+_KNOWN_CATEGORIES = {"love", "wealth", "fortune", "pastlife", "vocation", "daewoon"}
+
 def _category_prompt_files(category: str) -> tuple[str, str, str | None]:
-    if category == "love":
-        return "love_analyze_user.txt", "love_system.txt", None
+    if category in _KNOWN_CATEGORIES:
+        return f"{category}_analyze_user.txt", f"{category}_system.txt", None
     return "wealth_analyze_user.txt", "wealth_system.txt", None
+
+
+def _relation_prompt_files(category: str) -> tuple[str, str]:
+    return f"{category}_analyze_user.txt", f"{category}_system.txt"
 
 
 def _international_age(birth_year: int, birth_month: int, birth_day: int, ref: date) -> int:
@@ -54,6 +67,7 @@ def _build_user_message(
         birth_info=birth_info,
         gender="남성" if gender == Gender.male else "여성",
         current_year=ref.year,
+        current_year_korean=_year_ganji(ref.year),
         reference_date_iso=ref.isoformat(),
         age_international=_international_age(birth_year, birth_month, birth_day, ref),
         age_korean=_year_counting_age(birth_year, ref),
@@ -63,6 +77,101 @@ def _build_user_message(
         hour_korean=fp.hour_pillar.korean,   hour_stem=fp.hour_pillar.heavenly_stem,   hour_branch=fp.hour_pillar.earthly_branch,
         rag_context=rag_context,
     )
+
+
+def _build_relation_user_message(
+    template: str,
+    fp_a: "FourPillars",
+    fp_b: "FourPillars",
+    label_a: str,
+    label_b: str,
+    gender_a: "Gender",
+    gender_b: "Gender",
+    birth_info_a: str,
+    birth_info_b: str,
+    birth_year_a: int, birth_month_a: int, birth_day_a: int,
+    birth_year_b: int, birth_month_b: int, birth_day_b: int,
+    rag_context: str,
+) -> str:
+    ref = date.today()
+    return template.format(
+        label_a=label_a or "A",
+        label_b=label_b or "B",
+        birth_info_a=birth_info_a,
+        birth_info_b=birth_info_b,
+        gender_a="남성" if gender_a == Gender.male else "여성",
+        gender_b="남성" if gender_b == Gender.male else "여성",
+        current_year=ref.year,
+        current_year_korean=_year_ganji(ref.year),
+        age_a=_international_age(birth_year_a, birth_month_a, birth_day_a, ref),
+        age_b=_international_age(birth_year_b, birth_month_b, birth_day_b, ref),
+        year_korean_a=fp_a.year_pillar.korean,   year_stem_a=fp_a.year_pillar.heavenly_stem,   year_branch_a=fp_a.year_pillar.earthly_branch,
+        month_korean_a=fp_a.month_pillar.korean, month_stem_a=fp_a.month_pillar.heavenly_stem, month_branch_a=fp_a.month_pillar.earthly_branch,
+        day_korean_a=fp_a.day_pillar.korean,     day_stem_a=fp_a.day_pillar.heavenly_stem,     day_branch_a=fp_a.day_pillar.earthly_branch,
+        hour_korean_a=fp_a.hour_pillar.korean,   hour_stem_a=fp_a.hour_pillar.heavenly_stem,   hour_branch_a=fp_a.hour_pillar.earthly_branch,
+        year_korean_b=fp_b.year_pillar.korean,   year_stem_b=fp_b.year_pillar.heavenly_stem,   year_branch_b=fp_b.year_pillar.earthly_branch,
+        month_korean_b=fp_b.month_pillar.korean, month_stem_b=fp_b.month_pillar.heavenly_stem, month_branch_b=fp_b.month_pillar.earthly_branch,
+        day_korean_b=fp_b.day_pillar.korean,     day_stem_b=fp_b.day_pillar.heavenly_stem,     day_branch_b=fp_b.day_pillar.earthly_branch,
+        hour_korean_b=fp_b.hour_pillar.korean,   hour_stem_b=fp_b.hour_pillar.heavenly_stem,   hour_branch_b=fp_b.hour_pillar.earthly_branch,
+        rag_context=rag_context,
+    )
+
+
+async def stream_relation_with_llm(
+    fp_a: "FourPillars",
+    fp_b: "FourPillars",
+    label_a: str,
+    label_b: str,
+    gender_a: "Gender",
+    gender_b: "Gender",
+    birth_info_a: str,
+    birth_info_b: str,
+    birth_year_a: int, birth_month_a: int, birth_day_a: int,
+    birth_year_b: int, birth_month_b: int, birth_day_b: int,
+    rag_context: str = "",
+    category: str = "couple",
+) -> AsyncIterator[str]:
+    user_file, system_file = _relation_prompt_files(category)
+    user_template = _load(user_file)
+    system = _load(system_file)
+
+    user_message = _build_relation_user_message(
+        user_template,
+        fp_a, fp_b,
+        label_a, label_b,
+        gender_a, gender_b,
+        birth_info_a, birth_info_b,
+        birth_year_a, birth_month_a, birth_day_a,
+        birth_year_b, birth_month_b, birth_day_b,
+        rag_context,
+    )
+    messages = [{"role": "user", "content": user_message}]
+
+    print(f"[LLM] 관계 스트림 | category={category} | prompt={len(user_message)}자", flush=True)
+
+    t0 = time.perf_counter()
+    ttft: float | None = None
+
+    async with client.messages.stream(
+        model=MODEL,
+        max_tokens=MAX_TOKENS,
+        system=system,
+        messages=messages,
+    ) as stream:
+        async for delta in stream.text_stream:
+            if ttft is None:
+                ttft = time.perf_counter() - t0
+            yield delta
+        try:
+            final = await stream.get_final_message()
+            total = time.perf_counter() - t0
+            print(
+                f"[LLM] 관계 스트림 완료 | {total:.2f}s (TTFT {ttft:.2f}s)"
+                f" | in={final.usage.input_tokens} out={final.usage.output_tokens} tokens",
+                flush=True,
+            )
+        except Exception as e:
+            print(f"[LLM] get_final_message 실패: {e}")
 
 
 def _parse_analysis(full_text: str) -> tuple[str, str]:

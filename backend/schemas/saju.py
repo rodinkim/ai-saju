@@ -75,3 +75,28 @@ class SajuResponse(BaseModel):
     four_pillars: FourPillars = Field(..., description="사주팔자")
     analysis: str = Field(..., description="사주 풀이 텍스트")
     summary: str = Field(..., description="한 줄 요약")
+
+
+class PersonInfo(BaseModel):
+    year: int = Field(..., ge=1900, le=2100)
+    month: int = Field(..., ge=1, le=12)
+    day: int = Field(..., ge=1, le=31)
+    hour: int = Field(..., ge=0, le=23)
+    minute: int = Field(0, ge=0, le=59)
+    gender: Gender
+    calendar_type: CalendarType = CalendarType.solar
+    is_leap_month: bool = False
+    label: str = Field("", description="이름 또는 별칭 (선택, 없으면 A/B로 표시)")
+
+
+class RelationRequest(BaseModel):
+    person_a: PersonInfo
+    person_b: PersonInfo
+    category: str = Field(..., description="couple / family / friendship")
+
+
+class RelationResponse(BaseModel):
+    person_a_pillars: FourPillars
+    person_b_pillars: FourPillars
+    analysis: str
+    summary: str

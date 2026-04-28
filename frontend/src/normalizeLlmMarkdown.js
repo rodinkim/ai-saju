@@ -5,9 +5,9 @@
  * 전각 별(U+FF0A) → ASCII `*`, 과도한 빈 줄 정리.
  */
 
-const NEEDS_SPACE_BEFORE_OPEN = /[\uac00-\ud7af\u4e00-\u9fff\u3040-\u30ffA-Za-z0-9)\]」』）]/;
+const NEEDS_SPACE_BEFORE_OPEN = /[가-힯一-鿿぀-ヿA-Za-z0-9)\]」』）]/;
 
-const NEEDS_SPACE_AFTER_CLOSE = /[\uac00-\ud7af\u4e00-\u9fff]/;
+const NEEDS_SPACE_AFTER_CLOSE = /[가-힯一-鿿]/;
 
 function insertSpaceBeforeOpen(beforeChunk) {
   if (!beforeChunk) return beforeChunk;
@@ -76,10 +76,6 @@ function normalizeBoldInSegment(text) {
 }
 
 /**
- * @param {string} text
- * @returns {string}
- */
-/**
  * 단일 `~`를 이스케이프합니다.
  * `~~취소선~~`은 건드리지 않고, 숫자·텍스트 사이의 `~`(범위 표현)만 `\~`로 변환합니다.
  * 예: `33~40세` → `33\~40세`, `2033~2043년` → `2033\~2043년`
@@ -89,14 +85,35 @@ function escapeSingleTilde(text) {
   return text.replace(/(?<!~)~(?!~)/g, '\\~');
 }
 
+/**
+ * 첫 번째 ## 섹션 이전에 나타나는 마크다운 테이블(| 로 시작하는 줄)을 제거합니다.
+ * LLM이 입력 사주 데이터를 테이블로 요약 출력하는 현상을 방지합니다.
+ */
+function stripLeadingTable(text) {
+  const headingPos = text.search(/^##\s/m);
+  if (headingPos === -1) {
+    // 아직 ## 섹션 없음(스트리밍 중) — 테이블 줄만 제거
+    return text.replace(/^(\s*\|[^\n]*\n?)*/s, '').trimStart();
+  }
+  const preamble = text.slice(0, headingPos);
+  const rest = text.slice(headingPos);
+  const cleanedPreamble = preamble
+    .split('\n')
+    .filter(line => !line.trim().startsWith('|'))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  return cleanedPreamble ? cleanedPreamble + '\n\n' + rest : rest;
+}
+
 export function normalizeLlmMarkdown(text) {
   if (!text) return text;
-  const normalizedStars = text.replace(/\uFF0A/g, '*');
+  const normalizedStars = text.replace(/＊/g, '*');
 
   const lines = normalizedStars.split(/\r?\n/);
-  const out = lines
+  const processed = lines
     .map((line) => escapeSingleTilde(line))
     .map((line) => normalizeBoldInSegment(line));
 
-  return out.join('\n').replace(/\n{3,}/g, '\n\n');
+  return stripLeadingTable(processed.join('\n').replace(/\n{3,}/g, '\n\n'));
 }
