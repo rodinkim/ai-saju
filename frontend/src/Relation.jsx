@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { normalizeLlmMarkdown } from './normalizeLlmMarkdown.js'
+import ChargeModal from './ChargeModal.jsx'
 import './App.css'
 import './Relation.css'
 
@@ -183,7 +184,22 @@ export default function Relation() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [creditError, setCreditError] = useState(false)
   const [needsLogin, setNeedsLogin] = useState(false)
+  const [user, setUser] = useState(null)
+  const [showCharge, setShowCharge] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      fetch(`http://${API_HOST}:8000/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(setUser)
+        .catch(() => {})
+    }
+  }, [])
 
   const makeHandler = (setter) => (e) => {
     const { name, value, type, checked } = e.target
@@ -221,6 +237,7 @@ export default function Relation() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setCreditError(false)
     setNeedsLogin(false)
     setResult(null)
     setPillarsA(null)
@@ -245,7 +262,7 @@ export default function Relation() {
       if (!res.ok) {
         const d = await res.json()
         if (res.status === 401) { setNeedsLogin(true); setLoading(false); return }
-        if (res.status === 402) throw new Error('크레딧이 부족합니다. 충전 후 이용해주세요.')
+        if (res.status === 402) { setCreditError(true); throw new Error('크레딧이 부족합니다.') }
         throw new Error(d.detail || '분석 실패')
       }
 
@@ -354,7 +371,7 @@ export default function Relation() {
 
       {needsLogin && (
         <div className="login-required-card">
-          <div className="login-required-icon">✦</div>
+          <div className="login-required-icon">🪙</div>
           <div className="login-required-text">
             <strong>소셜 로그인으로 3초면 돼요</strong>
             <span>카카오 · 네이버 · 구글 중 편한 걸로</span>
@@ -365,7 +382,24 @@ export default function Relation() {
         </div>
       )}
 
-      {error && <div className="error-box">{error}</div>}
+      {creditError ? (
+        <div className="credit-error-card">
+
+          <div className="credit-error-body">
+            <strong>크레딧이 부족해요</strong>
+            <span>분석 1회에 10 크레딧이 필요해요</span>
+          </div>
+          <button className="credit-error-btn" onClick={() => setShowCharge(true)}>
+            충전하기
+          </button>
+        </div>
+      ) : error && (
+        <div className="error-box">{error}</div>
+      )}
+
+      {showCharge && user && (
+        <ChargeModal user={user} onClose={() => setShowCharge(false)} />
+      )}
 
       {pillarsA && (
         <div className="result-section">

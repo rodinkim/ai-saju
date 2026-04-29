@@ -51,7 +51,7 @@ export default function PaymentResult() {
 
       {status === 'success' && (
         <div className="result-card success">
-          <div className="result-icon">✦</div>
+          <div className="result-icon">🪙</div>
           <h2>충전 완료!</h2>
           <p><strong>{addedCredits} 크레딧</strong>이 지급되었어요</p>
           <p className="result-sub">토정으로 운명을 탐구해보세요</p>

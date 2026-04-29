@@ -31,6 +31,39 @@ JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE    = int(os.environ.get("JWT_EXPIRE_MINUTES", "10080"))
 
 
+def _get_or_create_user(
+    db: Session,
+    provider: str,
+    provider_id: str,
+    email: str | None,
+    name: str | None,
+    profile_image: str | None,
+) -> User:
+    # 1. 기존 소셜 계정 조회
+    user = db.query(User).filter_by(provider=provider, provider_id=str(provider_id)).first()
+    if user:
+        return user
+
+    # 2. 이메일이 있으면 다른 소셜 계정과 병합 (중복 가입 방지)
+    if email:
+        user = db.query(User).filter(User.email == email).first()
+        if user:
+            return user
+
+    # 3. 신규 생성
+    user = User(
+        provider=provider,
+        provider_id=str(provider_id),
+        email=email,
+        name=name,
+        profile_image=profile_image,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def _issue_jwt(user_id: int) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE)
     return jwt.encode({"sub": str(user_id), "exp": expire}, JWT_SECRET, algorithm=JWT_ALGORITHM)
@@ -116,18 +149,12 @@ async def naver_callback(
     if not provider_id:
         raise HTTPException(status_code=400, detail="네이버 사용자 정보 조회 실패")
 
-    user = db.query(User).filter_by(provider="naver", provider_id=str(provider_id)).first()
-    if not user:
-        user = User(
-            provider="naver",
-            provider_id=str(provider_id),
-            email=profile.get("email"),
-            name=profile.get("name"),
-            profile_image=profile.get("profile_image"),
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user = _get_or_create_user(
+        db, "naver", str(provider_id),
+        email=profile.get("email"),
+        name=profile.get("name"),
+        profile_image=profile.get("profile_image"),
+    )
 
     token = _issue_jwt(user.id)
     return RedirectResponse(f"{FRONTEND_URL}/?token={token}")
@@ -186,18 +213,12 @@ async def kakao_callback(
     kakao_account = profile.get("kakao_account", {})
     kakao_profile = kakao_account.get("profile", {})
 
-    user = db.query(User).filter_by(provider="kakao", provider_id=str(provider_id)).first()
-    if not user:
-        user = User(
-            provider="kakao",
-            provider_id=str(provider_id),
-            email=kakao_account.get("email"),
-            name=kakao_profile.get("nickname"),
-            profile_image=kakao_profile.get("profile_image_url"),
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user = _get_or_create_user(
+        db, "kakao", str(provider_id),
+        email=kakao_account.get("email"),
+        name=kakao_profile.get("nickname"),
+        profile_image=kakao_profile.get("profile_image_url"),
+    )
 
     token = _issue_jwt(user.id)
     return RedirectResponse(f"{FRONTEND_URL}/?token={token}")
@@ -257,18 +278,12 @@ async def google_callback(
     if not provider_id:
         raise HTTPException(status_code=400, detail="구글 사용자 정보 조회 실패")
 
-    user = db.query(User).filter_by(provider="google", provider_id=str(provider_id)).first()
-    if not user:
-        user = User(
-            provider="google",
-            provider_id=str(provider_id),
-            email=profile.get("email"),
-            name=profile.get("name"),
-            profile_image=profile.get("picture"),
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user = _get_or_create_user(
+        db, "google", str(provider_id),
+        email=profile.get("email"),
+        name=profile.get("name"),
+        profile_image=profile.get("picture"),
+    )
 
     token = _issue_jwt(user.id)
     return RedirectResponse(f"{FRONTEND_URL}/?token={token}")

@@ -136,7 +136,7 @@ export default function Home() {
                 <img className="user-avatar" src={user.profile_image} alt={user.name} referrerPolicy="no-referrer" />
               )}
               <span className="user-name">{user.name}</span>
-              <button className="user-credits" onClick={() => setShowCharge(true)}>✦ {user.credits}</button>
+              <button className="user-credits" onClick={() => setShowCharge(true)}>🪙 {user.credits}</button>
               <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
             </div>
           ) : (
@@ -151,8 +151,8 @@ export default function Home() {
         <button className="free-credit-banner" onClick={() => setShowLogin(true)}>
           <span className="free-credit-badge">무료</span>
           <div className="free-credit-text">
-            <strong>지금 로그인하면 100 크레딧 즉시 지급</strong>
-            <span>사주 분석 10회를 무료로 경험해보세요</span>
+            <strong>지금 로그인하면 30 크레딧 즉시 지급</strong>
+            <span>사주 분석 3회를 무료로 경험해보세요</span>
           </div>
           <span className="free-credit-arrow">›</span>
         </button>

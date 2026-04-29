@@ -35,9 +35,9 @@ async def startup():
     Base.metadata.create_all(bind=engine)
     with engine.connect() as conn:
         conn.execute(text(
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS credits INTEGER NOT NULL DEFAULT 100"
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS credits INTEGER NOT NULL DEFAULT 30"
         ))
-        conn.execute(text("UPDATE users SET credits = 100 WHERE credits = 1"))
+        conn.execute(text("UPDATE users SET credits = 30 WHERE credits = 1"))
         conn.commit()
     print(f"\n{'='*50}")
     print(f"  AI 사주 분석 서비스 시작 v2")

@@ -16,9 +16,9 @@ router = APIRouter(prefix="/payment", tags=["결제"])
 TOSS_SECRET_KEY = os.environ.get("TOSS_SECRET_KEY", "")
 
 CREDIT_PACKAGES = {
-    4900:  100,
-    12900: 300,
-    19900: 500,
+    3900:  100,
+    9900:  300,
+    16900: 500,
 }
 
 

@@ -12,7 +12,7 @@ class User(Base):
     email = Column(String, nullable=True)
     name = Column(String, nullable=True)
     profile_image = Column(String, nullable=True)
-    credits = Column(Integer, nullable=False, default=100, server_default="100")
+    credits = Column(Integer, nullable=False, default=30, server_default="30")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
