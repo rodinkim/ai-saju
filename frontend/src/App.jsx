@@ -6,8 +6,8 @@ import { normalizeLlmMarkdown } from './normalizeLlmMarkdown.js'
 import ChargeModal from './ChargeModal.jsx'
 import './App.css'
 
-const API_HOST = window.location.hostname || 'localhost'
-const API_URL = `http://${API_HOST}:8000/api/saju/analyze/stream`
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8000`
+const API_URL = `${API_BASE}/api/saju/analyze/stream`
 
 
 /** `node` / `rest`는 DOM에 넘기지 않음(Safari·React 경고로 스타일 무시 유발 가능). */
@@ -158,7 +158,7 @@ export default function App() {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
-      fetch(`http://${API_HOST}:8000/auth/me`, {
+      fetch(`${API_BASE}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(r => r.ok ? r.json() : Promise.reject())

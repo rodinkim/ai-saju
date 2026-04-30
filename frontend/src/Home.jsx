@@ -3,8 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import './Home.css'
 import ChargeModal from './ChargeModal.jsx'
 
-const API_HOST = window.location.hostname || 'localhost'
-const API_BASE = `http://${API_HOST}:8000`
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8000`
 
 const CATEGORIES = [
   {
@@ -208,7 +207,14 @@ export default function Home() {
         ))}
       </div>
 
-      <p className="home-footer">토정 · 생년월일시 기반 명리 분석</p>
+      <footer className="home-footer">
+        <p className="home-footer-brand">토정</p>
+        <p>상호명: 토정 · 대표자: 김오성</p>
+        <p>사업자등록번호: 810-67-00813</p>
+        <p>주소: 서울특별시 서초구 반포동 740-3</p>
+        <p>고객센터: 010-2315-1992 · rladhtjdzoq@naver.com</p>
+        <p className="home-footer-copy">© 2025 토정. All rights reserved.</p>
+      </footer>
 
     </div>
 

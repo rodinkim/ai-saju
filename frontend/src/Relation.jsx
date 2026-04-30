@@ -7,8 +7,8 @@ import ChargeModal from './ChargeModal.jsx'
 import './App.css'
 import './Relation.css'
 
-const API_HOST = window.location.hostname || 'localhost'
-const API_URL = `http://${API_HOST}:8000/api/saju/relation/stream`
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8000`
+const API_URL = `${API_BASE}/api/saju/relation/stream`
 
 const analysisMarkdownComponents = {
   strong: ({ node: _node, className, children }) => (
@@ -192,7 +192,7 @@ export default function Relation() {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
-      fetch(`http://${API_HOST}:8000/auth/me`, {
+      fetch(`${API_BASE}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(r => r.ok ? r.json() : Promise.reject())
