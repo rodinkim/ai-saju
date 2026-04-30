@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import './Home.css'
 import ChargeModal from './ChargeModal.jsx'
 
@@ -207,12 +207,36 @@ export default function Home() {
         ))}
       </div>
 
+      <div className="category-section-label">크레딧 요금</div>
+      <div className="pricing-list">
+        {[
+          { credits: 100, count: 10, amount: 3900,  label: '기본' },
+          { credits: 300, count: 30, amount: 9900,  label: '인기', popular: true },
+          { credits: 500, count: 50, amount: 16900, label: '프리미엄' },
+        ].map(pkg => (
+          <div key={pkg.credits} className={`pricing-card${pkg.popular ? ' pricing-popular' : ''}`}>
+            {pkg.popular && <span className="pricing-badge">인기</span>}
+            <div className="pricing-info">
+              <span className="pricing-label">{pkg.label}</span>
+              <span className="pricing-credits">{pkg.credits} 크레딧 · 분석 {pkg.count}회</span>
+            </div>
+            <span className="pricing-price">{pkg.amount.toLocaleString()}원</span>
+          </div>
+        ))}
+        <p className="pricing-note">1회 분석에 10 크레딧이 사용됩니다 · 부가세 포함</p>
+      </div>
+
       <footer className="home-footer">
         <p className="home-footer-brand">토정</p>
         <p>상호명: 토정 · 대표자: 김오성</p>
         <p>사업자등록번호: 810-67-00813</p>
         <p>주소: 서울특별시 서초구 반포동 740-3</p>
         <p>고객센터: 010-2315-1992 · rladhtjdzoq@naver.com</p>
+        <div className="home-footer-links">
+          <Link to="/terms">이용약관</Link>
+          <span>·</span>
+          <Link to="/privacy">개인정보처리방침</Link>
+        </div>
         <p className="home-footer-copy">© 2026 토정. All rights reserved.</p>
       </footer>
 

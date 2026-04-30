@@ -53,11 +53,11 @@ const SHI_OPTIONS = [
   { label: '술시 · 19:30 ~ 21:29', hour: 20, minute: 30 },
   { label: '해시 · 21:30 ~ 23:29', hour: 22, minute: 30 },
 ]
-const YEAR_OPTIONS = Array.from({ length: 2010 - 1940 + 1 }, (_, i) => 2010 - i)
+const YEAR_OPTIONS = Array.from({ length: new Date().getFullYear() - 1940 + 1 }, (_, i) => new Date().getFullYear() - i)
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1)
 function getDaysInMonth(year, month) { return new Date(year, month, 0).getDate() }
 
-const initialForm = { year: 1992, month: 8, day: 26, shiIndex: 9, gender: 'male', calendar_type: 'solar', is_leap_month: false }
+const initialForm = { year: '', month: '', day: '', shiIndex: '', gender: '', calendar_type: 'solar', is_leap_month: false }
 
 function ElementBadge({ char, elementMap }) {
   const meta = ELEMENT_META[elementMap[char]] || {}
@@ -173,19 +173,18 @@ export default function App() {
       const updated = {
         ...prev,
         [name]: type === 'checkbox' ? checked
-               : ['year', 'month', 'day', 'shiIndex'].includes(name) ? Number(value)
+               : ['year', 'month', 'day', 'shiIndex'].includes(name) ? (value === '' ? '' : Number(value))
                : value,
       }
       if (name === 'calendar_type' && value === 'solar') {
         updated.is_leap_month = false
       }
-      // 연/월 변경 시 선택한 일이 해당 월 최대치를 초과하면 보정
-      if (name === 'year' || name === 'month') {
+      if ((name === 'year' || name === 'month') && updated.year !== '' && updated.month !== '') {
         const maxDay = getDaysInMonth(
           name === 'year' ? Number(value) : prev.year,
           name === 'month' ? Number(value) : prev.month,
         )
-        if (updated.day > maxDay) updated.day = maxDay
+        if (updated.day !== '' && updated.day > maxDay) updated.day = maxDay
       }
       return updated
     })
@@ -194,6 +193,9 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (form.year === '' || form.month === '' || form.day === '' || form.shiIndex === '' || form.gender === '') {
+      setError('생년월일, 태어난 시, 성별을 모두 선택해주세요.'); return
+    }
     setLoading(true); setError(null); setCreditError(false); setNeedsLogin(false); setResult(null); setPillars(null); setStreamText('')
     try {
       const shi = SHI_OPTIONS[form.shiIndex]
@@ -306,6 +308,7 @@ export default function App() {
                 <div className="field field-year">
                   <label>연도</label>
                   <select name="year" value={form.year} onChange={handleChange}>
+                    <option value="" disabled>연도</option>
                     {YEAR_OPTIONS.map(y => (
                       <option key={y} value={y}>{y}년</option>
                     ))}
@@ -314,6 +317,7 @@ export default function App() {
                 <div className="field">
                   <label>월</label>
                   <select name="month" value={form.month} onChange={handleChange}>
+                    <option value="" disabled>월</option>
                     {MONTH_OPTIONS.map(m => (
                       <option key={m} value={m}>{m}월</option>
                     ))}
@@ -322,7 +326,8 @@ export default function App() {
                 <div className="field">
                   <label>일</label>
                   <select name="day" value={form.day} onChange={handleChange}>
-                    {Array.from({ length: getDaysInMonth(form.year, form.month) }, (_, i) => i + 1).map(d => (
+                    <option value="" disabled>일</option>
+                    {Array.from({ length: getDaysInMonth(form.year || 2000, form.month || 1) }, (_, i) => i + 1).map(d => (
                       <option key={d} value={d}>{d}일</option>
                     ))}
                   </select>
@@ -355,6 +360,7 @@ export default function App() {
               <p className="field-hint">출생 시간대를 선택해주세요 · 정확하지 않으면 가장 가까운 시간대로</p>
               <div className="field">
                 <select name="shiIndex" value={form.shiIndex} onChange={handleChange}>
+                  <option value="" disabled>시간대를 선택해주세요</option>
                   {SHI_OPTIONS.map((s, i) => (
                     <option key={i} value={i}>{s.label}</option>
                   ))}
