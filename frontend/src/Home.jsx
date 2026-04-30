@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import './Home.css'
 import ChargeModal from './ChargeModal.jsx'
 
-const API_HOST = window.location.hostname || 'localhost'
-const API_BASE = `http://${API_HOST}:8000`
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8000`
 
 const CATEGORIES = [
   {
@@ -136,7 +135,7 @@ export default function Home() {
                 <img className="user-avatar" src={user.profile_image} alt={user.name} referrerPolicy="no-referrer" />
               )}
               <span className="user-name">{user.name}</span>
-              <button className="user-credits" onClick={() => setShowCharge(true)}>✦ {user.credits}</button>
+              <button className="user-credits" onClick={() => setShowCharge(true)}>🪙 {user.credits}</button>
               <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
             </div>
           ) : (
@@ -151,8 +150,8 @@ export default function Home() {
         <button className="free-credit-banner" onClick={() => setShowLogin(true)}>
           <span className="free-credit-badge">무료</span>
           <div className="free-credit-text">
-            <strong>지금 로그인하면 100 크레딧 즉시 지급</strong>
-            <span>사주 분석 10회를 무료로 경험해보세요</span>
+            <strong>지금 로그인하면 30 크레딧 즉시 지급</strong>
+            <span>사주 분석 3회를 무료로 경험해보세요</span>
           </div>
           <span className="free-credit-arrow">›</span>
         </button>
@@ -208,7 +207,38 @@ export default function Home() {
         ))}
       </div>
 
-      <p className="home-footer">토정 · 생년월일시 기반 명리 분석</p>
+      <div className="category-section-label">크레딧 요금</div>
+      <div className="pricing-list">
+        {[
+          { credits: 100, count: 10, amount: 3900,  label: '기본' },
+          { credits: 300, count: 30, amount: 9900,  label: '인기', popular: true },
+          { credits: 500, count: 50, amount: 16900, label: '프리미엄' },
+        ].map(pkg => (
+          <div key={pkg.credits} className={`pricing-card${pkg.popular ? ' pricing-popular' : ''}`}>
+            {pkg.popular && <span className="pricing-badge">인기</span>}
+            <div className="pricing-info">
+              <span className="pricing-label">{pkg.label}</span>
+              <span className="pricing-credits">{pkg.credits} 크레딧 · 분석 {pkg.count}회</span>
+            </div>
+            <span className="pricing-price">{pkg.amount.toLocaleString()}원</span>
+          </div>
+        ))}
+        <p className="pricing-note">1회 분석에 10 크레딧이 사용됩니다 · 부가세 포함</p>
+      </div>
+
+      <footer className="home-footer">
+        <p className="home-footer-brand">토정</p>
+        <p>상호명: 토정 · 대표자: 김오성</p>
+        <p>사업자등록번호: 810-67-00813</p>
+        <p>주소: 서울특별시 서초구 반포동 740-3</p>
+        <p>고객센터: 010-2315-1992 · rladhtjdzoq@naver.com</p>
+        <div className="home-footer-links">
+          <Link to="/terms">이용약관</Link>
+          <span>·</span>
+          <Link to="/privacy">개인정보처리방침</Link>
+        </div>
+        <p className="home-footer-copy">© 2026 토정. All rights reserved.</p>
+      </footer>
 
     </div>
 

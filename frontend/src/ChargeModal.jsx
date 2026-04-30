@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import './ChargeModal.css'
 
-const API_HOST = window.location.hostname || 'localhost'
-const API_BASE = `http://${API_HOST}:8000`
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8000`
 const TOSS_CLIENT_KEY = 'test_ck_KNbdOvk5rkwvA5bmk4ZErn07xlzm'
 
 const PACKAGES = [
-  { credits: 100, count: 10, amount: 4900,  label: '기본' },
-  { credits: 300, count: 30, amount: 12900, label: '인기', popular: true },
-  { credits: 500, count: 50, amount: 19900, label: '프리미엄' },
+  { credits: 100, count: 10, amount: 3900,  label: '기본' },
+  { credits: 300, count: 30, amount: 9900,  label: '인기', popular: true },
+  { credits: 500, count: 50, amount: 16900, label: '프리미엄' },
 ]
 
 function loadTossScript() {

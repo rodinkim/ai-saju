@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './PaymentResult.css'
 
-const API_HOST = window.location.hostname || 'localhost'
-const API_BASE = `http://${API_HOST}:8000`
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8000`
 
 export default function PaymentResult() {
   const navigate = useNavigate()
@@ -51,7 +50,7 @@ export default function PaymentResult() {
 
       {status === 'success' && (
         <div className="result-card success">
-          <div className="result-icon">✦</div>
+          <div className="result-icon">🪙</div>
           <h2>충전 완료!</h2>
           <p><strong>{addedCredits} 크레딧</strong>이 지급되었어요</p>
           <p className="result-sub">토정으로 운명을 탐구해보세요</p>

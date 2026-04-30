@@ -288,6 +288,53 @@
   word-break: keep-all;
 }
 
+/* ── 크레딧 부족 카드 ── */
+.credit-error-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 20px 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #FFFBF0 0%, #FEF5D8 100%);
+  border: 1px solid #F0DFA0;
+  text-align: center;
+}
+.credit-error-icon {
+  font-size: 26px;
+  color: #C4962A;
+  margin-bottom: 4px;
+}
+.credit-error-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.credit-error-body strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.credit-error-body span {
+  font-size: 13px;
+  color: #888;
+}
+.credit-error-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 13px 0;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #C4962A 0%, #D4A830 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  letter-spacing: 0.01em;
+}
+.credit-error-btn:active { opacity: 0.85; }
+
 /* ── 결과 영역 ── */
 .result-section {
   display: flex;
@@ -487,8 +534,8 @@
 .analysis-body strong,
 .analysis-body b,
 .analysis-body .md-strong {
-  font-weight: 700;
-  color: var(--text-h);
+  font-weight: 400;
+  color: var(--text);
 }
 .analysis-body em {
   font-style: italic;
