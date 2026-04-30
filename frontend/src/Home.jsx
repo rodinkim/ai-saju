@@ -213,7 +213,7 @@ export default function Home() {
         <p>사업자등록번호: 810-67-00813</p>
         <p>주소: 서울특별시 서초구 반포동 740-3</p>
         <p>고객센터: 010-2315-1992 · rladhtjdzoq@naver.com</p>
-        <p className="home-footer-copy">© 2025 토정. All rights reserved.</p>
+        <p className="home-footer-copy">© 2026 토정. All rights reserved.</p>
       </footer>
 
     </div>
