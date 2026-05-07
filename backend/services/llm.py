@@ -7,13 +7,7 @@ from anthropic import AsyncAnthropic
 
 import settings
 from schemas.saju import FourPillars, Gender
-
-_STEMS_KR = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"]
-_BRANCHES_KR = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"]
-
-def _year_ganji(year: int) -> str:
-    offset = (year - 1984) % 60
-    return _STEMS_KR[offset % 10] + _BRANCHES_KR[offset % 12]
+from services.ganji import year_ganji as _year_ganji
 
 client = AsyncAnthropic(api_key=settings.get_anthropic_api_key())
 

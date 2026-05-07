@@ -4,7 +4,6 @@ RAG 서비스 — LangChain + ChromaDB로 사주 이론 문서를 검색해 LLM 
 
 import time
 from pathlib import Path
-from typing import Optional
 
 import settings
 from langchain_anthropic import ChatAnthropic
@@ -13,6 +12,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEmbeddings
 
 from schemas.saju import FourPillars
+from services.ganji import stem_to_korean as _stem_to_korean, branch_to_korean as _branch_to_korean
 
 CHROMA_DIR = Path(__file__).parent.parent / "data" / "chroma"
 COLLECTION_NAME = "saju_theory"
@@ -30,7 +30,7 @@ _QUERY_GEN_PROMPT = PromptTemplate(
 )
 
 # 싱글톤 — 앱 수명 동안 재사용
-_vectorstore: Optional[Chroma] = None
+_vectorstore: Chroma | None = None
 _query_chain = None  # PromptTemplate | ChatAnthropic
 
 
@@ -51,7 +51,7 @@ def _get_query_chain():
     global _query_chain
     if _query_chain is None:
         llm = ChatAnthropic(
-            model="claude-haiku-4-5-20251001",
+            model=settings.get_llm_model(),
             api_key=settings.get_anthropic_api_key(),
             max_tokens=300,
             temperature=0,
@@ -59,17 +59,6 @@ def _get_query_chain():
         _query_chain = _QUERY_GEN_PROMPT | llm
     return _query_chain
 
-
-def _stem_to_korean(stem: str) -> str:
-    mapping = {"甲":"갑","乙":"을","丙":"병","丁":"정","戊":"무",
-               "己":"기","庚":"경","辛":"신","壬":"임","癸":"계"}
-    return mapping.get(stem, stem)
-
-
-def _branch_to_korean(branch: str) -> str:
-    mapping = {"子":"자","丑":"축","寅":"인","卯":"묘","辰":"진","巳":"사",
-               "午":"오","未":"미","申":"신","酉":"유","戌":"술","亥":"해"}
-    return mapping.get(branch, branch)
 
 
 def _build_context_query(four_pillars: FourPillars, category: str) -> str:
@@ -79,8 +68,15 @@ def _build_context_query(four_pillars: FourPillars, category: str) -> str:
     year_branch_kr  = _branch_to_korean(four_pillars.year_pillar.earthly_branch)
 
     focus = {
-        "wealth": "재물운, 직업, 재성·식상·관성, 용신, 오행 균형, 대운·세운",
-        "love":   "연애운, 인연, 배우자 성향, 관성·재성, 도화살, 감정 패턴, 대운·세운",
+        "wealth":     "재물운, 재성·식상·관성, 용신, 오행 균형, 재물 흐름, 대운·세운",
+        "love":       "연애운, 배우자 인연, 관성·재성, 도화살, 배우자궁, 감정 패턴, 대운·세운",
+        "fortune":    "대운·세운·월운, 용신 흐름, 오행 길흉, 행운, 월지 특성, 신살",
+        "pastlife":   "납음오행, 공망, 원국 기질, 전생 인연, 업(業), 숙명적 특성",
+        "vocation":   "직업 적성, 관성·식상·재성, 십신 특성, 용신, 전문성, 사회적 역할",
+        "daewoon":    "대운 흐름, 세운, 행운(行運), 용신 변화, 운의 길흉, 천간지지 변화",
+        "couple":     "일주 합충, 오행 조화, 부부궁, 배우자성, 관계 천간지지 합충, 궁합",
+        "family":     "육친, 부모궁·형제궁·자녀궁, 인성·비겁, 가족 인연, 육친 합충",
+        "friendship": "비겁·식상, 사회성, 인간관계, 합충, 군비, 대인관계 패턴",
     }.get(category, "성격·기질, 오행 특성, 용신, 신살·귀인")
 
     return (
