@@ -29,8 +29,6 @@ def _normalize_secret(value: str) -> str:
 
 def _read_env(key: str) -> str:
     raw = os.environ.get(key, "")
-    if not isinstance(raw, str):
-        return ""
     return _normalize_secret(raw)
 
 
@@ -42,7 +40,7 @@ def get_llm_model() -> str:
 def get_anthropic_api_key() -> str:
     v = _read_env(ANTHROPIC_API_KEY_ENV)
     if not v:
-        return ""
+        raise RuntimeError(f"환경변수 {ANTHROPIC_API_KEY_ENV}가 설정되지 않았습니다.")
     # Anthropic keys are single-line; collapse accidental whitespace/newlines from Secret Manager or .env pastes
     return "".join(v.split())
 
