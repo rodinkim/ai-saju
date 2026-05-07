@@ -71,12 +71,6 @@ class FourPillars(BaseModel):
     sinsal: list[SinsalItem] = Field(default_factory=list, description="신살 목록")
 
 
-class SajuResponse(BaseModel):
-    four_pillars: FourPillars = Field(..., description="사주팔자")
-    analysis: str = Field(..., description="사주 풀이 텍스트")
-    summary: str = Field(..., description="한 줄 요약")
-
-
 class PersonInfo(BaseModel):
     year: int = Field(..., ge=1900, le=2100)
     month: int = Field(..., ge=1, le=12)
@@ -94,9 +88,3 @@ class RelationRequest(BaseModel):
     person_b: PersonInfo
     category: str = Field(..., description="couple / family / friendship")
 
-
-class RelationResponse(BaseModel):
-    person_a_pillars: FourPillars
-    person_b_pillars: FourPillars
-    analysis: str
-    summary: str

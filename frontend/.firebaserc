@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "saju-494604"
-  }
+  },
+  "targets": {
+    "saju-494604": {
+      "hosting": {
+        "tojung": [
+          "saju-494604"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

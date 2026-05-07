@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from korean_lunar_calendar import KoreanLunarCalendar
 from sqlalchemy.orm import Session
-from schemas.saju import SajuRequest, SajuResponse, CalendarType, FourPillars, Pillar, SinsalItem, GwiinItem, PersonInfo, RelationRequest, RelationResponse
-from services.llm import analyze_with_llm, stream_with_llm, stream_relation_with_llm, _parse_analysis
+from schemas.saju import SajuRequest, CalendarType, FourPillars, Pillar, SinsalItem, GwiinItem, PersonInfo, RelationRequest
+from services.llm import stream_with_llm, stream_relation_with_llm, _parse_analysis
 from services.rag import search_relevant_theory
 from services.sinsal import calculate_gwiin_sinsal
 from database import get_db
@@ -181,50 +181,6 @@ def _lunar_to_solar(year: int, month: int, day: int, is_leap: bool) -> tuple[int
     return cal.solarYear, cal.solarMonth, cal.solarDay
 
 
-@router.post("/analyze", response_model=SajuResponse)
-async def analyze_saju(req: SajuRequest):
-    """
-    사주팔자 분석.
-    0단계: 음력이면 양력으로 변환
-    1단계: 만세력 계산 (사주팔자 산출)
-    2단계: Claude API 기반 해석
-    """
-    solar_year, solar_month, solar_day = req.year, req.month, req.day
-    lunar_info = ""
-
-    if req.calendar_type == CalendarType.lunar:
-        solar_year, solar_month, solar_day = _lunar_to_solar(
-            req.year, req.month, req.day, req.is_leap_month
-        )
-        leap_str = "(윤달)" if req.is_leap_month else ""
-        lunar_info = f" [음력 {req.year}년 {req.month}월 {req.day}일{leap_str} → 양력 {solar_year}년 {solar_month}월 {solar_day}일]"
-
-        # 양력으로 변환된 값으로 req를 재구성 (immutable 우회)
-        req = req.model_copy(update={"year": solar_year, "month": solar_month, "day": solar_day})
-
-    four_pillars = calculate_four_pillars(req)
-
-    birth_info = f"{solar_year}년 {solar_month}월 {solar_day}일 {req.hour}시 {req.minute}분{lunar_info}"
-    rag_context = search_relevant_theory(four_pillars, category=req.category)
-    try:
-        analysis, summary = await analyze_with_llm(
-            four_pillars,
-            req.gender,
-            solar_year,
-            solar_month,
-            solar_day,
-            birth_info,
-            rag_context,
-            category=req.category,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM 분석 실패: {str(e)}")
-
-    return SajuResponse(
-        four_pillars=four_pillars,
-        analysis=analysis,
-        summary=summary,
-    )
 
 
 @router.post("/analyze/stream")
@@ -297,7 +253,7 @@ async def analyze_saju_stream(
         print(f"[RES] 생성 완료 | 텍스트 길이={len(full_text)}자")
 
         # 3) 완료: summary 파싱 후 전송
-        analysis, summary = _parse_analysis(full_text)
+        _, summary = _parse_analysis(full_text)
         yield sse("done", {"summary": summary})
 
     return StreamingResponse(
@@ -386,7 +342,7 @@ async def relation_stream(
             yield sse("error", str(e))
             return
 
-        analysis, summary = _parse_analysis(full_text)
+        _, summary = _parse_analysis(full_text)
         yield sse("done", {"summary": summary})
 
     return StreamingResponse(

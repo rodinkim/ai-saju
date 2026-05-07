@@ -2,11 +2,11 @@
 RAG 서비스 — LangChain + ChromaDB로 사주 이론 문서를 검색해 LLM 컨텍스트를 보강합니다.
 """
 
-import os
 import time
 from pathlib import Path
 from typing import Optional
 
+import settings
 from langchain_anthropic import ChatAnthropic
 from langchain_chroma import Chroma
 from langchain_core.prompts import PromptTemplate
@@ -52,7 +52,7 @@ def _get_query_chain():
     if _query_chain is None:
         llm = ChatAnthropic(
             model="claude-haiku-4-5-20251001",
-            api_key=os.getenv("ANTHROPIC_API_KEY"),
+            api_key=settings.get_anthropic_api_key(),
             max_tokens=300,
             temperature=0,
         )
