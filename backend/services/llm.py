@@ -7,7 +7,7 @@ from anthropic import AsyncAnthropic
 
 import settings
 from schemas.saju import FourPillars, Gender
-from services.ganji import year_ganji as _year_ganji
+from services.ganji import year_ganji as _year_ganji  # noqa: F401 — used via _year_ganji alias
 
 client = AsyncAnthropic(api_key=settings.get_anthropic_api_key())
 
