@@ -1,4 +1,5 @@
 import settings  # noqa: F401 — load backend/.env before other modules read os.environ
+import truststore; truststore.inject_into_ssl()  # noqa: E702 — Windows 시스템 인증서 연결
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Response
