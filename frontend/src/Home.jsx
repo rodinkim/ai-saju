@@ -85,27 +85,34 @@ const RELATION_CATEGORIES = [
   },
 ]
 
+const UserIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8"
+    strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+)
+
 export default function Home() {
   const navigate = useNavigate()
   const location = useLocation()
   const [user, setUser] = useState(null)
   const [showLogin, setShowLogin] = useState(false)
   const [showCharge, setShowCharge] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
 
   useEffect(() => {
     if (location.state?.openLogin) setShowLogin(true)
   }, [location.state])
 
   useEffect(() => {
-    // 소셜 콜백 후 URL에 ?token= 이 있으면 저장
     const params = new URLSearchParams(window.location.search)
     const token = params.get('token')
     if (token) {
       localStorage.setItem('token', token)
       window.history.replaceState({}, '', '/')
     }
-
-    // 저장된 토큰으로 사용자 정보 조회
     const saved = localStorage.getItem('token')
     if (saved) {
       fetch(`${API_BASE}/auth/me`, {
@@ -120,29 +127,38 @@ export default function Home() {
   const handleLogout = () => {
     localStorage.removeItem('token')
     setUser(null)
+    setShowUserMenu(false)
   }
 
   return (
     <>
     <div className="home-page">
 
-      <header className="home-header">
-        <div className="home-header-top">
-          <div className="home-brand">토정</div>
-          {user ? (
-            <div className="user-info">
-              {user.profile_image && (
-                <img className="user-avatar" src={user.profile_image} alt={user.name} referrerPolicy="no-referrer" />
-              )}
-              <span className="user-name">{user.name}</span>
-              <button className="user-credits" onClick={() => setShowCharge(true)}>🪙 {user.credits}</button>
-              <button className="history-btn" onClick={() => navigate('/history')}>📜 이력</button>
-              <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
-            </div>
-          ) : (
-            <button className="login-trigger-btn" onClick={() => setShowLogin(true)}>로그인</button>
+      {/* ── 네비게이션 바 ── */}
+      <nav className="home-nav">
+        <div className="home-nav-side" />
+        <span className="home-nav-brand">토정</span>
+        <div className="home-nav-side home-nav-right">
+          {user && (
+            <button className="nav-credits-btn" onClick={() => setShowCharge(true)}>
+              🪙 {user.credits}
+            </button>
           )}
+          <button
+            className={`nav-user-btn${user ? ' nav-user-btn--active' : ''}`}
+            onClick={() => user ? setShowUserMenu(true) : setShowLogin(true)}
+            aria-label={user ? '프로필 메뉴' : '로그인'}
+          >
+            {user?.profile_image
+              ? <img className="nav-avatar" src={user.profile_image} alt={user.name} referrerPolicy="no-referrer" />
+              : <UserIcon />
+            }
+          </button>
         </div>
+      </nav>
+
+      {/* ── 히어로 ── */}
+      <header className="home-hero">
         <h1 className="home-title">오늘, 무엇이<br /><em>궁금하세요?</em></h1>
         <p className="home-sub">명리학으로 나를 더 깊이 이해해보세요</p>
       </header>
@@ -247,8 +263,56 @@ export default function Home() {
       <ChargeModal user={user} onClose={() => setShowCharge(false)} />
     )}
 
-    {showLogin && (
+    {/* ── 유저 메뉴 바텀시트 ── */}
+    {showUserMenu && user && (
+      <>
+        <div className="login-backdrop" onClick={() => setShowUserMenu(false)} />
+        <div className="user-menu-sheet">
+          <div className="login-sheet-handle" />
+          <div className="user-menu-profile">
+            {user.profile_image
+              ? <img className="user-menu-avatar" src={user.profile_image} alt={user.name} referrerPolicy="no-referrer" />
+              : <div className="user-menu-avatar-placeholder"><UserIcon /></div>
+            }
+            <div className="user-menu-info">
+              <p className="user-menu-name">{user.name}</p>
+              <p className="user-menu-credits">🪙 크레딧 {user.credits}개 보유</p>
+            </div>
+          </div>
+          <div className="user-menu-divider" />
+          <div className="user-menu-actions">
+            <button className="user-menu-item" onClick={() => { setShowUserMenu(false); navigate('/history') }}>
+              <span className="user-menu-item-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+              </span>
+              분석 이력
+              <svg className="user-menu-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button className="user-menu-item" onClick={() => { setShowUserMenu(false); setShowCharge(true) }}>
+              <span className="user-menu-item-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="16"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+              </span>
+              크레딧 충전
+              <svg className="user-menu-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          <div className="user-menu-divider" />
+          <button className="user-menu-logout" onClick={handleLogout}>로그아웃</button>
+        </div>
+      </>
+    )}
 
+    {showLogin && (
       <>
         <div className="login-backdrop" onClick={() => setShowLogin(false)} />
         <div className="login-sheet">
