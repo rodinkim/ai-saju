@@ -508,12 +508,10 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.18s var(--ease-spring), box-shadow 0.18s;
-  box-shadow: var(--shadow-md);
   background: transparent;
 }
 .category-card:active {
   transform: scale(0.94);
-  box-shadow: var(--shadow-sm);
 }
 
 /* 이미지 / 이모지 영역 */
