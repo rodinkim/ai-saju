@@ -204,7 +204,6 @@ export default function Home() {
             <button
               key={cat.id}
               className="category-card"
-              style={{ background: cat.gradient }}
               onClick={() => navigate(cat.isRelation ? '/relation' : '/analyze', { state: { category: cat } })}
             >
               <div className="category-card-media">
