@@ -18,7 +18,8 @@ from langchain_huggingface import HuggingFaceEmbeddings
 DOCS_DIR = Path(__file__).parent.parent / "data" / "saju_docs"
 CHROMA_DIR = Path(__file__).parent.parent / "data" / "chroma"
 COLLECTION_NAME = "saju_theory"
-EMBEDDING_MODEL = "jhgan/ko-sroberta-multitask"
+EMBEDDING_MODEL = "jhgan/ko-sroberta-multitask"  # 한국어 특화 경량 모델
+# EMBEDDING_MODEL = "BAAI/bge-m3"  # 다국어 대형 모델 — 이 도메인에서 유사도 점수 분포가 낮아 비적합
 
 
 def load_to_chroma():
@@ -38,7 +39,11 @@ def load_to_chroma():
     print(f"임베딩 모델 로드: {EMBEDDING_MODEL}")
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
-    texts = [d["content"] for d in docs]
+    # name + keywords + content 순으로 임베딩 → 검색 정확도 향상
+    texts = [
+        f'{d["name"]}\n{d.get("keywords", "")}\n{d["content"]}'.strip()
+        for d in docs
+    ]
     metadatas = [{"category": d["category"], "name": d["name"]} for d in docs]
     ids = [d["id"] for d in docs]
 
