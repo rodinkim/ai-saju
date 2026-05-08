@@ -101,6 +101,7 @@ export default function Home() {
   const [showLogin, setShowLogin] = useState(false)
   const [showCharge, setShowCharge] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showDrawer, setShowDrawer] = useState(false)
 
   useEffect(() => {
     if (location.state?.openLogin) setShowLogin(true)
@@ -136,7 +137,16 @@ export default function Home() {
 
       {/* ── 네비게이션 바 ── */}
       <nav className="home-nav">
-        <div className="home-nav-side" />
+        <div className="home-nav-side">
+          <button className="nav-menu-btn" onClick={() => setShowDrawer(true)} aria-label="메뉴">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6"  x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+        </div>
         <span className="home-nav-brand">토정</span>
         <div className="home-nav-side home-nav-right">
           {user && (
@@ -261,6 +271,79 @@ export default function Home() {
 
     {showCharge && (
       <ChargeModal user={user} onClose={() => setShowCharge(false)} />
+    )}
+
+    {/* ── 좌측 드로어 ── */}
+    {showDrawer && (
+      <>
+        <div className="drawer-backdrop" onClick={() => setShowDrawer(false)} />
+        <aside className="drawer">
+          <div className="drawer-header">
+            <span className="drawer-brand">토정</span>
+            <button className="drawer-close" onClick={() => setShowDrawer(false)} aria-label="닫기">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <div className="drawer-section-label">분석</div>
+          <nav className="drawer-menu">
+            <button className="drawer-item" onClick={() => { setShowDrawer(false); navigate('/analyze', { state: { category: CATEGORIES[0] } }) }}>
+              <span className="drawer-item-icon" style={{ background: '#FEF6EB' }}>🌿</span>
+              <span className="drawer-item-text">나의 사주 분석</span>
+              <svg className="drawer-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button className="drawer-item" onClick={() => { setShowDrawer(false); navigate('/relation', { state: { category: RELATION_CATEGORIES[0] } }) }}>
+              <span className="drawer-item-icon" style={{ background: '#FEF0F6' }}>🪡</span>
+              <span className="drawer-item-text">두 사람 사주 분석</span>
+              <svg className="drawer-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </nav>
+
+          <div className="drawer-divider" />
+          <div className="drawer-section-label">나의 기록</div>
+          <nav className="drawer-menu">
+            <button className="drawer-item" onClick={() => { setShowDrawer(false); user ? navigate('/history') : setShowLogin(true) }}>
+              <span className="drawer-item-icon" style={{ background: '#F4EEF8' }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+              </span>
+              <span className="drawer-item-text">분석 이력</span>
+              <svg className="drawer-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button className="drawer-item" onClick={() => { setShowDrawer(false); user ? setShowCharge(true) : setShowLogin(true) }}>
+              <span className="drawer-item-icon" style={{ background: '#FEF6EB' }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="16"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+              </span>
+              <span className="drawer-item-text">크레딧 충전</span>
+              {user && <span className="drawer-credits-badge">🪙 {user.credits}</span>}
+              <svg className="drawer-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </nav>
+
+          {user && (
+            <>
+              <div className="drawer-divider" />
+              <button className="drawer-logout" onClick={() => { handleLogout(); setShowDrawer(false) }}>로그아웃</button>
+            </>
+          )}
+
+          <div className="drawer-footer">
+            <p>명리학으로 나를 더 깊이 이해해보세요</p>
+          </div>
+        </aside>
+      </>
     )}
 
     {/* ── 유저 메뉴 바텀시트 ── */}
