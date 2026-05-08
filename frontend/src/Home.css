@@ -501,7 +501,7 @@
 
 .category-card {
   border: none;
-  border-radius: 20px;
+  border-radius: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
