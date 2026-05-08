@@ -13,6 +13,7 @@ const CATEGORIES = [
     icon: '🌒',
     gradient: 'linear-gradient(135deg, #F4EEF8 0%, #EAE0F5 100%)',
     accent: '#8A60B0',
+    image: '/images/fortune.jpg',
   },
   {
     id: 'love',
@@ -196,26 +197,26 @@ export default function Home() {
         )}
 
         <div className="category-grid">
-          {CATEGORIES.map(cat => (
+          {[
+            ...CATEGORIES.map(cat => ({ ...cat, isRelation: false })),
+            ...RELATION_CATEGORIES.map(cat => ({ ...cat, isRelation: true })),
+          ].map(cat => (
             <button
               key={cat.id}
               className="category-card"
               style={{ background: cat.gradient }}
-              onClick={() => navigate('/analyze', { state: { category: cat } })}
+              onClick={() => navigate(cat.isRelation ? '/relation' : '/analyze', { state: { category: cat } })}
             >
-              <span className="category-card-icon">{cat.icon}</span>
-              <span className="category-card-title" style={{ color: cat.accent }}>{cat.title}</span>
-            </button>
-          ))}
-          {RELATION_CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              className="category-card"
-              style={{ background: cat.gradient }}
-              onClick={() => navigate('/relation', { state: { category: cat } })}
-            >
-              <span className="category-card-icon">{cat.icon}</span>
-              <span className="category-card-title" style={{ color: cat.accent }}>{cat.title}</span>
+              <div className="category-card-media">
+                {cat.image
+                  ? <img src={cat.image} alt={cat.title} onError={e => { e.currentTarget.style.display = 'none' }} />
+                  : <span className="category-card-icon">{cat.icon}</span>
+                }
+              </div>
+              <div className="category-card-body">
+                <span className="category-card-title" style={{ color: cat.accent }}>{cat.title}</span>
+                <span className="category-card-sub">{cat.sub}</span>
+              </div>
             </button>
           ))}
         </div>
