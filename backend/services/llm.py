@@ -1,4 +1,3 @@
-import os
 import re
 import time
 from datetime import date
@@ -8,23 +7,25 @@ from anthropic import AsyncAnthropic
 
 import settings
 from schemas.saju import FourPillars, Gender
+from services.ganji import year_ganji as _year_ganji  # noqa: F401 — used via _year_ganji alias
 
-_STEMS_KR = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"]
-_BRANCHES_KR = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"]
-
-def _year_ganji(year: int) -> str:
-    offset = (year - 1984) % 60
-    return _STEMS_KR[offset % 10] + _BRANCHES_KR[offset % 12]
-
-client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+client = AsyncAnthropic(api_key=settings.get_anthropic_api_key())
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 MODEL = settings.get_llm_model()
 MAX_TOKENS = 6000
 
+_prompt_cache: dict[str, str] = {}
+
 def _load(filename: str) -> str:
-    return (PROMPTS_DIR / filename).read_text(encoding="utf-8")
+    if filename not in _prompt_cache:
+        _prompt_cache[filename] = (PROMPTS_DIR / filename).read_text(encoding="utf-8")
+    return _prompt_cache[filename]
+
+
+def _cached_system(text: str) -> list[dict]:
+    return [{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}]
 
 
 _KNOWN_CATEGORIES = {"love", "wealth", "fortune", "pastlife", "vocation", "daewoon"}
@@ -155,7 +156,7 @@ async def stream_relation_with_llm(
     async with client.messages.stream(
         model=MODEL,
         max_tokens=MAX_TOKENS,
-        system=system,
+        system=_cached_system(system),
         messages=messages,
     ) as stream:
         async for delta in stream.text_stream:
@@ -165,9 +166,13 @@ async def stream_relation_with_llm(
         try:
             final = await stream.get_final_message()
             total = time.perf_counter() - t0
+            u = final.usage
+            cache_read = getattr(u, "cache_read_input_tokens", 0) or 0
+            cache_write = getattr(u, "cache_creation_input_tokens", 0) or 0
             print(
                 f"[LLM] 관계 스트림 완료 | {total:.2f}s (TTFT {ttft:.2f}s)"
-                f" | in={final.usage.input_tokens} out={final.usage.output_tokens} tokens",
+                f" | in={u.input_tokens} out={u.output_tokens}"
+                f" | cache_read={cache_read} cache_write={cache_write}",
                 flush=True,
             )
         except Exception as e:
@@ -192,53 +197,6 @@ def _parse_analysis(full_text: str) -> tuple[str, str]:
 
     return full_text, full_text[:80] + "..."
 
-
-async def analyze_with_llm(
-    four_pillars: FourPillars,
-    gender: Gender,
-    birth_year: int,
-    birth_month: int,
-    birth_day: int,
-    birth_info: str,
-    rag_context: str = "",
-    category: str = "wealth",
-) -> tuple[str, str]:
-    """사주 분석. Returns: (analysis, summary)"""
-    user_prompt, system_prompt, prefill_file = _category_prompt_files(category)
-    user_template = _load(user_prompt)
-    system_text = _load(system_prompt)
-    prefill = _load(prefill_file) if prefill_file else None
-
-    user_message = _build_user_message(
-        user_template,
-        four_pillars,
-        gender,
-        birth_info,
-        rag_context,
-        birth_year,
-        birth_month,
-        birth_day,
-    )
-    messages = [{"role": "user", "content": user_message}]
-    if prefill:
-        messages.append({"role": "assistant", "content": prefill})
-
-    print(f"[LLM] 요청 | model={MODEL} | prompt={len(user_message)}자 | rag={len(rag_context)}자", flush=True)
-
-    t0 = time.perf_counter()
-    message = await client.messages.create(
-        model=MODEL,
-        max_tokens=MAX_TOKENS,
-        system=system_text,
-        messages=messages,
-    )
-    elapsed = time.perf_counter() - t0
-    print(
-        f"[LLM] 완료 | {elapsed:.2f}s | stop={message.stop_reason}"
-        f" | in={message.usage.input_tokens} out={message.usage.output_tokens} tokens",
-        flush=True,
-    )
-    return _parse_analysis(message.content[0].text)
 
 
 async def stream_with_llm(
@@ -279,7 +237,7 @@ async def stream_with_llm(
     async with client.messages.stream(
         model=MODEL,
         max_tokens=MAX_TOKENS,
-        system=system,
+        system=_cached_system(system),
         messages=messages,
     ) as stream:
         async for delta in stream.text_stream:
@@ -289,10 +247,14 @@ async def stream_with_llm(
         try:
             final = await stream.get_final_message()
             total = time.perf_counter() - t0
+            u = final.usage
+            cache_read = getattr(u, "cache_read_input_tokens", 0) or 0
+            cache_write = getattr(u, "cache_creation_input_tokens", 0) or 0
             print(
                 f"[LLM] 스트림 완료 | 총 {total:.2f}s (TTFT {ttft:.2f}s)"
                 f" | stop={final.stop_reason}"
-                f" | in={final.usage.input_tokens} out={final.usage.output_tokens} tokens",
+                f" | in={u.input_tokens} out={u.output_tokens}"
+                f" | cache_read={cache_read} cache_write={cache_write}",
                 flush=True,
             )
         except Exception as e:

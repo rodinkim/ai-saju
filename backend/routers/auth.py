@@ -13,10 +13,11 @@ from models.user import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost")
+
 NAVER_CLIENT_ID     = os.environ.get("NAVER_CLIENT_ID", "")
 NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET", "")
 NAVER_REDIRECT_URI  = os.environ.get("NAVER_REDIRECT_URI", "http://localhost:8000/auth/naver/callback")
-FRONTEND_URL        = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
 KAKAO_CLIENT_ID     = os.environ.get("KAKAO_CLIENT_ID", "")
 KAKAO_CLIENT_SECRET = os.environ.get("KAKAO_CLIENT_SECRET", "")
@@ -26,7 +27,9 @@ GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REDIRECT_URI  = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/google/callback")
 
-JWT_SECRET    = os.environ.get("JWT_SECRET_KEY", "change-this-secret")
+JWT_SECRET    = os.environ.get("JWT_SECRET_KEY", "")
+if not JWT_SECRET:
+    raise RuntimeError("환경변수 JWT_SECRET_KEY가 설정되지 않았습니다.")
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE    = int(os.environ.get("JWT_EXPIRE_MINUTES", "10080"))
 
@@ -121,7 +124,7 @@ async def naver_callback(
     if error or not code:
         return RedirectResponse(f"{FRONTEND_URL}/")
 
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient() as client:
         token_res = await client.post(
             "https://nid.naver.com/oauth2.0/token",
             params={
@@ -138,7 +141,7 @@ async def naver_callback(
     if not access_token:
         raise HTTPException(status_code=400, detail="네이버 토큰 발급 실패")
 
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient() as client:
         profile_res = await client.get(
             "https://openapi.naver.com/v1/nid/me",
             headers={"Authorization": f"Bearer {access_token}"},
@@ -182,7 +185,7 @@ async def kakao_callback(
     if error or not code:
         return RedirectResponse(f"{FRONTEND_URL}/")
 
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient() as client:
         token_res = await client.post(
             "https://kauth.kakao.com/oauth/token",
             data={
@@ -199,7 +202,7 @@ async def kakao_callback(
     if not access_token:
         raise HTTPException(status_code=400, detail="카카오 토큰 발급 실패")
 
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient() as client:
         profile_res = await client.get(
             "https://kapi.kakao.com/v2/user/me",
             headers={"Authorization": f"Bearer {access_token}"},
@@ -250,7 +253,7 @@ async def google_callback(
     if error or not code:
         return RedirectResponse(f"{FRONTEND_URL}/")
 
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient() as client:
         token_res = await client.post(
             "https://oauth2.googleapis.com/token",
             data={
@@ -267,7 +270,7 @@ async def google_callback(
     if not access_token:
         raise HTTPException(status_code=400, detail="구글 토큰 발급 실패")
 
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient() as client:
         profile_res = await client.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
             headers={"Authorization": f"Bearer {access_token}"},

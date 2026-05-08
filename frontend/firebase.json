@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "tojung",
     "public": "dist",
     "ignore": [
       "firebase.json",

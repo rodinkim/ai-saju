@@ -45,7 +45,7 @@ async def confirm_payment(
 
     # 토스 결제 승인
     secret = base64.b64encode(f"{TOSS_SECRET_KEY}:".encode()).decode()
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient() as client:
         res = await client.post(
             "https://api.tosspayments.com/v1/payments/confirm",
             headers={

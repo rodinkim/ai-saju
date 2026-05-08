@@ -1,10 +1,8 @@
 """
 귀인(貴人) 및 신살(神煞) 계산 모듈
 """
-from __future__ import annotations
-
-HEAVENLY_STEMS  = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
-EARTHLY_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
+from schemas.saju import FourPillars
+from services.ganji import HEAVENLY_STEMS, EARTHLY_BRANCHES
 
 # ── 귀인 ────────────────────────────────────────────────────────
 
@@ -142,7 +140,7 @@ GONGMANG: dict[str, list[str]] = _build_gongmang()
 
 # ── 메인 계산 함수 ───────────────────────────────────────────────
 
-def calculate_gwiin_sinsal(fp) -> tuple[list[str], list[dict], list[dict]]:
+def calculate_gwiin_sinsal(fp: FourPillars) -> tuple[list[str], list[dict], list[dict]]:
     """
     FourPillars 객체를 받아 (귀인 이름 목록, 귀인 상세, 신살 목록)을 반환.
     귀인 항목: {"name": str, "basis": str, "matched": list[str], "weakened": bool, "weaken_reason": str}

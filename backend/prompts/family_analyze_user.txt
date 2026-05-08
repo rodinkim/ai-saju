@@ -1,13 +1,13 @@
 두 사람의 가족 관계 분석을 작성하세요. 기준 연도: {current_year}년({current_year_korean}년).
 
-[{label_a}] / 성별: {gender_a} / 만 {age_a}세
+[{label_a}] / 성별: {gender_a}
 생년월일시: {birth_info_a}
 - 년주: {year_korean_a} ({year_stem_a}{year_branch_a})
 - 월주: {month_korean_a} ({month_stem_a}{month_branch_a})
 - 일주: {day_korean_a} ({day_stem_a}{day_branch_a})
 - 시주: {hour_korean_a} ({hour_stem_a}{hour_branch_a})
 
-[{label_b}] / 성별: {gender_b} / 만 {age_b}세
+[{label_b}] / 성별: {gender_b}
 생년월일시: {birth_info_b}
 - 년주: {year_korean_b} ({year_stem_b}{year_branch_b})
 - 월주: {month_korean_b} ({month_stem_b}{month_branch_b})
@@ -21,7 +21,8 @@
 위 두 사람의 사주를 바탕으로 예시와 같은 스타일로 가족 관계 분석을 써주세요.
 
 섹션 시작 전, 소제목 없이 도입부 2~3문장을 써주세요.
-두 사람의 기운이 가족 안에서 어떻게 만나는지를 일간 특성 기반으로 한마디로 정의하는 문장으로 시작하세요.
+도입부 첫 문장은 두 사람 사주 원국에서 가장 인상적인 가족 기운이나 특별한 연결점을 골라, 읽는 즉시 '우리 사이 얘기다' 싶게 써주세요. 단순 칭찬이 아닌 두 원국에서 실제로 읽히는 특성으로, 고객이 이 관계의 깊이에 따뜻함과 공감을 느끼도록.
+이어서 두 사람의 기운이 가족 안에서 어떻게 만나는지를 일간 특성 기반으로 한마디로 정의하는 문장으로 마무리하세요.
 형태: "이 두 사람, ~~한 사이예요." 등 자연스럽게.
 
 섹션 순서: 두 사람 어떤 에너지예요 → 연결되는 방식 → 힘이 되는 순간 → 엇갈리는 지점 → 더 가까워지는 방법 → 이렇게 해보세요
