@@ -1,14 +1,18 @@
 import json
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from korean_lunar_calendar import KoreanLunarCalendar
 from sqlalchemy.orm import Session
-from schemas.saju import SajuRequest, CalendarType, FourPillars, PersonInfo, RelationRequest
+from schemas.saju import (
+    SajuRequest, CalendarType, FourPillars, PersonInfo, RelationRequest,
+    AnalysisItem, AnalysisDetail,
+)
 from services.llm import stream_with_llm, stream_relation_with_llm, _parse_analysis
 from services.pillars import calculate_four_pillars
 from services.rag import search_relevant_theory
 from database import get_db
 from models.user import User
+from models.analysis import Analysis
 from routers.auth import require_current_user
 
 router = APIRouter(prefix="/api/saju", tags=["사주 분석"])
@@ -103,6 +107,21 @@ async def analyze_saju_stream(
         _, summary = _parse_analysis(full_text)
         yield sse("done", {"summary": summary})
 
+        # 4) 분석 이력 저장 (실패해도 응답에 영향 없음)
+        try:
+            db.add(Analysis(
+                user_id=current_user.id,
+                category=req.category,
+                birth_info=birth_info,
+                day_pillar=four_pillars.day_pillar.korean,
+                four_pillars=four_pillars.model_dump(),
+                summary=summary,
+                result_text=full_text,
+            ))
+            db.commit()
+        except Exception as e:
+            print(f"[WARN] 분석 이력 저장 실패: {e}")
+
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
@@ -191,8 +210,90 @@ async def relation_stream(
         _, summary = _parse_analysis(full_text)
         yield sse("done", {"summary": summary})
 
+        # 분석 이력 저장 (실패해도 응답에 영향 없음)
+        try:
+            db.add(Analysis(
+                user_id=current_user.id,
+                category=req.category,
+                birth_info=bi_a,
+                day_pillar=fp_a.day_pillar.korean,
+                four_pillars=fp_a.model_dump(),
+                label_a=req.person_a.label or None,
+                label_b=req.person_b.label or None,
+                birth_info_b=bi_b,
+                day_pillar_b=fp_b.day_pillar.korean,
+                four_pillars_b=fp_b.model_dump(),
+                summary=summary,
+                result_text=full_text,
+            ))
+            db.commit()
+        except Exception as e:
+            print(f"[WARN] 관계 분석 이력 저장 실패: {e}")
+
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.get("/history", response_model=list[AnalysisItem])
+async def get_history(
+    current_user: User = Depends(require_current_user),
+    db: Session = Depends(get_db),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """분석 이력 목록 조회 (최신순, 기본 20개)."""
+    rows = (
+        db.query(Analysis)
+        .filter(Analysis.user_id == current_user.id)
+        .order_by(Analysis.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        AnalysisItem(
+            id=r.id,
+            category=r.category,
+            birth_info=r.birth_info,
+            day_pillar=r.day_pillar,
+            label_a=r.label_a,
+            label_b=r.label_b,
+            birth_info_b=r.birth_info_b,
+            day_pillar_b=r.day_pillar_b,
+            summary=r.summary,
+            created_at=r.created_at.isoformat(),
+        )
+        for r in rows
+    ]
+
+
+@router.get("/history/{analysis_id}", response_model=AnalysisDetail)
+async def get_history_detail(
+    analysis_id: int,
+    current_user: User = Depends(require_current_user),
+    db: Session = Depends(get_db),
+):
+    """분석 이력 상세 조회 (전문 포함)."""
+    row = (
+        db.query(Analysis)
+        .filter(Analysis.id == analysis_id, Analysis.user_id == current_user.id)
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="분석 이력을 찾을 수 없습니다.")
+    return AnalysisDetail(
+        id=row.id,
+        category=row.category,
+        birth_info=row.birth_info,
+        day_pillar=row.day_pillar,
+        label_a=row.label_a,
+        label_b=row.label_b,
+        birth_info_b=row.birth_info_b,
+        day_pillar_b=row.day_pillar_b,
+        summary=row.summary,
+        created_at=row.created_at.isoformat(),
+        four_pillars=row.four_pillars,
+        four_pillars_b=row.four_pillars_b,
+        result_text=row.result_text,
     )

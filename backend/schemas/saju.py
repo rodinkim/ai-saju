@@ -88,3 +88,26 @@ class RelationRequest(BaseModel):
     person_b: PersonInfo
     category: str = Field(..., description="couple / family / friendship")
 
+
+class AnalysisItem(BaseModel):
+    """분석 이력 목록 항목"""
+    id: int
+    category: str
+    birth_info: str
+    day_pillar: str
+    label_a: str | None
+    label_b: str | None
+    birth_info_b: str | None
+    day_pillar_b: str | None
+    summary: str | None
+    created_at: str   # ISO 8601
+
+    model_config = {"from_attributes": True}
+
+
+class AnalysisDetail(AnalysisItem):
+    """분석 이력 상세 (전문 포함)"""
+    four_pillars: dict
+    four_pillars_b: dict | None
+    result_text: str | None
+

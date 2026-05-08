@@ -7,8 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import saju, auth, payment
 from services.llm import MODEL
 from database import engine, Base
-import models.user     # noqa: F401
-import models.payment  # noqa: F401
+import models.user      # noqa: F401
+import models.payment   # noqa: F401
+import models.analysis  # noqa: F401
 
 
 @asynccontextmanager
