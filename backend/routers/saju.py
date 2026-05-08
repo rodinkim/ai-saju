@@ -43,10 +43,8 @@ async def analyze_saju_stream(
     if current_user.credits < 10:
         raise HTTPException(status_code=402, detail="크레딧이 부족합니다. 충전 후 이용해주세요.")
 
-    current_user.credits -= 10
-    db.commit()
-
-    print(f"[STREAM] 함수 진입 year={req.year} category={req.category} user={current_user.id} credits_left={current_user.credits}", flush=True)
+    # 사주 계산 / RAG 검색을 크레딧 차감 전에 수행
+    # → 이 단계에서 실패하면 크레딧 소모 없음
     solar_year, solar_month, solar_day = req.year, req.month, req.day
     lunar_info = ""
 
@@ -62,18 +60,22 @@ async def analyze_saju_stream(
     birth_info = f"{solar_year}년 {solar_month}월 {solar_day}일 {req.hour}시 {req.minute}분{lunar_info}"
     rag_context = search_relevant_theory(four_pillars, category=req.category)
 
+    # 모든 사전 작업 성공 후 크레딧 차감
+    current_user.credits -= 10
+    db.commit()
+
+    print(f"[STREAM] year={req.year} category={req.category} user={current_user.id} credits_left={current_user.credits}", flush=True)
+    print(f"[REQ] category={req.category} birth={birth_info}", flush=True)
+
     def sse(event: str, data) -> str:
-        # JSON 인코딩: delta에 \n\n 포함 시 SSE 파서 오작동 방지
         payload = json.dumps(data, ensure_ascii=False)
         return f"event: {event}\ndata: {payload}\n\n"
-
-    print(f"[REQ] category={req.category} birth={birth_info}", flush=True)
 
     async def event_stream():
         # 1) 원국 즉시 전송
         yield sse("pillars", four_pillars.model_dump())
 
-        # 2) LLM 스트리밍
+        # 2) LLM 스트리밍 — 실패 시 크레딧 환불
         full_text = ""
         try:
             async for chunk in stream_with_llm(
@@ -90,6 +92,8 @@ async def analyze_saju_stream(
                 yield sse("delta", chunk)
         except Exception as e:
             print(f"[ERR] LLM 스트리밍 실패: {e}")
+            current_user.credits += 10
+            db.commit()
             yield sse("error", str(e))
             return
 
@@ -144,15 +148,17 @@ async def relation_stream(
     if current_user.credits < 10:
         raise HTTPException(status_code=402, detail="크레딧이 부족합니다. 충전 후 이용해주세요.")
 
-    current_user.credits -= 10
-    db.commit()
-
+    # 사주 계산 / RAG 검색을 크레딧 차감 전에 수행
     fp_a, sy_a, sm_a, sd_a, bi_a = _resolve_person(req.person_a)
     fp_b, sy_b, sm_b, sd_b, bi_b = _resolve_person(req.person_b)
 
     rag_a = search_relevant_theory(fp_a, category=req.category)
     rag_b = search_relevant_theory(fp_b, category=req.category)
     rag_context = "\n".join(filter(None, [rag_a, rag_b]))
+
+    # 모든 사전 작업 성공 후 크레딧 차감
+    current_user.credits -= 10
+    db.commit()
 
     def sse(event: str, data) -> str:
         return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
@@ -177,6 +183,8 @@ async def relation_stream(
                 yield sse("delta", chunk)
         except Exception as e:
             print(f"[ERR] 관계 LLM 스트리밍 실패: {e}")
+            current_user.credits += 10
+            db.commit()
             yield sse("error", str(e))
             return
 
