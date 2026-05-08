@@ -103,10 +103,17 @@ export default function Home() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showDrawer, setShowDrawer] = useState(false)
   const [showPricing, setShowPricing] = useState(false)
+  const [navScrolled, setNavScrolled] = useState(false)
 
   useEffect(() => {
     if (location.state?.openLogin) setShowLogin(true)
   }, [location.state])
+
+  useEffect(() => {
+    const onScroll = () => setNavScrolled(window.scrollY > window.innerHeight * 0.38)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -134,127 +141,125 @@ export default function Home() {
 
   return (
     <>
-    {/* ── 배경 동영상 ── */}
-    <video
-      className="home-bg-video"
-      src="/saju_back.mp4"
-      autoPlay
-      muted
-      loop
-      playsInline
-      preload="auto"
-    />
-    <div className="home-bg-overlay" />
+    {/* ── 상단 고정 네비게이션 ── */}
+    <nav className={`home-nav${navScrolled ? ' home-nav--scrolled' : ''}`}>
+      <div className="home-nav-side">
+        <button className="nav-menu-btn" onClick={() => setShowDrawer(true)} aria-label="메뉴">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6"  x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <span className="home-nav-brand">토정</span>
+      <div className="home-nav-side home-nav-right">
+        {user && (
+          <button className="nav-credits-btn" onClick={() => setShowCharge(true)}>
+            🪙 {user.credits}
+          </button>
+        )}
+        <button
+          className={`nav-user-btn${user ? ' nav-user-btn--active' : ''}`}
+          onClick={() => user ? setShowUserMenu(true) : setShowLogin(true)}
+          aria-label={user ? '프로필 메뉴' : '로그인'}
+        >
+          {user?.profile_image
+            ? <img className="nav-avatar" src={user.profile_image} alt={user.name} referrerPolicy="no-referrer" />
+            : <UserIcon />
+          }
+        </button>
+      </div>
+    </nav>
 
     <div className="home-page">
 
-      {/* ── 네비게이션 바 ── */}
-      <nav className="home-nav">
-        <div className="home-nav-side">
-          <button className="nav-menu-btn" onClick={() => setShowDrawer(true)} aria-label="메뉴">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="3" y1="6"  x2="21" y2="6"/>
-              <line x1="3" y1="12" x2="21" y2="12"/>
-              <line x1="3" y1="18" x2="21" y2="18"/>
-            </svg>
+      {/* ── 비디오 히어로 ── */}
+      <div className="home-video-hero">
+        <video autoPlay muted loop playsInline preload="auto" src="/saju_back.mp4" />
+        <div className="home-video-fade" />
+      </div>
+
+      {/* ── 콘텐츠 시트 ── */}
+      <div className="home-content">
+
+        {!user && (
+          <button className="free-credit-banner" onClick={() => setShowLogin(true)}>
+            <span className="free-credit-badge">무료</span>
+            <div className="free-credit-text">
+              <strong>지금 로그인하면 30 크레딧 즉시 지급</strong>
+              <span>사주 분석 3회를 무료로 경험해보세요</span>
+            </div>
+            <span className="free-credit-arrow">›</span>
           </button>
-        </div>
-        <span className="home-nav-brand">토정</span>
-        <div className="home-nav-side home-nav-right">
-          {user && (
-            <button className="nav-credits-btn" onClick={() => setShowCharge(true)}>
-              🪙 {user.credits}
+        )}
+
+        <div className="category-section-label">나의 사주</div>
+        <div className="category-list">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              className="category-card"
+              style={{ background: cat.gradient }}
+              onClick={() => navigate('/analyze', { state: { category: cat } })}
+            >
+              <div className="category-img-wrap">
+                {cat.image && (
+                  <img
+                    src={cat.image}
+                    alt={cat.title}
+                    className="category-img"
+                    onError={e => { e.currentTarget.style.display = 'none' }}
+                  />
+                )}
+                <div className="category-img-fallback">{cat.icon}</div>
+              </div>
+              <div className="category-info">
+                <div className="category-title" style={{ color: cat.accent }}>{cat.title}</div>
+                <div className="category-sub">{cat.sub}</div>
+              </div>
+              <div className="category-arrow" style={{ color: cat.accent }}>›</div>
             </button>
-          )}
-          <button
-            className={`nav-user-btn${user ? ' nav-user-btn--active' : ''}`}
-            onClick={() => user ? setShowUserMenu(true) : setShowLogin(true)}
-            aria-label={user ? '프로필 메뉴' : '로그인'}
-          >
-            {user?.profile_image
-              ? <img className="nav-avatar" src={user.profile_image} alt={user.name} referrerPolicy="no-referrer" />
-              : <UserIcon />
-            }
-          </button>
+          ))}
         </div>
-      </nav>
 
-      {!user && (
-        <button className="free-credit-banner" onClick={() => setShowLogin(true)}>
-          <span className="free-credit-badge">무료</span>
-          <div className="free-credit-text">
-            <strong>지금 로그인하면 30 크레딧 즉시 지급</strong>
-            <span>사주 분석 3회를 무료로 경험해보세요</span>
+        <div className="category-section-label">두 사람 사주</div>
+        <div className="category-list">
+          {RELATION_CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              className="category-card category-card-relation"
+              style={{ background: cat.gradient }}
+              onClick={() => navigate('/relation', { state: { category: cat } })}
+            >
+              <div className="category-img-wrap">
+                <div className="category-img-fallback">{cat.icon}</div>
+              </div>
+              <div className="category-info">
+                <div className="category-title" style={{ color: cat.accent }}>{cat.title}</div>
+                <div className="category-sub">{cat.sub}</div>
+              </div>
+              <div className="category-arrow" style={{ color: cat.accent }}>›</div>
+            </button>
+          ))}
+        </div>
+
+        <footer className="home-footer">
+          <p className="home-footer-brand">토정</p>
+          <p>상호명: 토정 · 대표자: 김오성</p>
+          <p>사업자등록번호: 810-67-00813</p>
+          <p>주소: 서울특별시 서초구 반포동 740-3</p>
+          <p>고객센터: 010-2315-1992 · rladhtjdzoq@naver.com</p>
+          <div className="home-footer-links">
+            <Link to="/terms">이용약관</Link>
+            <span>·</span>
+            <Link to="/privacy">개인정보처리방침</Link>
           </div>
-          <span className="free-credit-arrow">›</span>
-        </button>
-      )}
+          <p className="home-footer-copy">© 2026 토정. All rights reserved.</p>
+        </footer>
 
-      <div className="category-section-label">나의 사주</div>
-      <div className="category-list">
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            className="category-card"
-            style={{ background: cat.gradient }}
-            onClick={() => navigate('/analyze', { state: { category: cat } })}
-          >
-            <div className="category-img-wrap">
-              {cat.image && (
-                <img
-                  src={cat.image}
-                  alt={cat.title}
-                  className="category-img"
-                  onError={e => { e.currentTarget.style.display = 'none' }}
-                />
-              )}
-              <div className="category-img-fallback">{cat.icon}</div>
-            </div>
-            <div className="category-info">
-              <div className="category-title" style={{ color: cat.accent }}>{cat.title}</div>
-              <div className="category-sub">{cat.sub}</div>
-            </div>
-            <div className="category-arrow" style={{ color: cat.accent }}>›</div>
-          </button>
-        ))}
       </div>
-
-      <div className="category-section-label">두 사람 사주</div>
-      <div className="category-list">
-        {RELATION_CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            className="category-card category-card-relation"
-            style={{ background: cat.gradient }}
-            onClick={() => navigate('/relation', { state: { category: cat } })}
-          >
-            <div className="category-img-wrap">
-              <div className="category-img-fallback">{cat.icon}</div>
-            </div>
-            <div className="category-info">
-              <div className="category-title" style={{ color: cat.accent }}>{cat.title}</div>
-              <div className="category-sub">{cat.sub}</div>
-            </div>
-            <div className="category-arrow" style={{ color: cat.accent }}>›</div>
-          </button>
-        ))}
-      </div>
-
-      <footer className="home-footer">
-        <p className="home-footer-brand">토정</p>
-        <p>상호명: 토정 · 대표자: 김오성</p>
-        <p>사업자등록번호: 810-67-00813</p>
-        <p>주소: 서울특별시 서초구 반포동 740-3</p>
-        <p>고객센터: 010-2315-1992 · rladhtjdzoq@naver.com</p>
-        <div className="home-footer-links">
-          <Link to="/terms">이용약관</Link>
-          <span>·</span>
-          <Link to="/privacy">개인정보처리방침</Link>
-        </div>
-        <p className="home-footer-copy">© 2026 토정. All rights reserved.</p>
-      </footer>
-
     </div>
 
     {showCharge && (

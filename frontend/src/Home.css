@@ -1,40 +1,46 @@
-/* ── 배경 동영상 ── */
-.home-bg-video {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 430px;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.home-bg-overlay {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 430px;
-  height: 100%;
-  background: rgba(250, 247, 242, 0.82);
-  z-index: 1;
-  pointer-events: none;
-}
-
 .home-page {
   width: 100%;
   max-width: 430px;
   margin: 0 auto;
-  padding: 0 20px calc(48px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  gap: 32px;
+}
+
+/* ── 비디오 히어로 ── */
+.home-video-hero {
   position: relative;
-  z-index: 2;
+  width: 100%;
+  height: 46vh;
+  min-height: 260px;
+  max-height: 400px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.home-video-hero video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.home-video-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
+}
+
+/* ── 콘텐츠 시트 ── */
+.home-content {
+  background: var(--bg);
+  padding: 8px 20px calc(56px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
 /* ── 네비게이션 바 ── */
@@ -42,14 +48,23 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  width: calc(100% + 40px);   /* 좌우 패딩 무력화 */
-  margin-left: -20px;
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 0 16px;
   height: 56px;
-  background: rgba(250, 247, 242, 0.88);
+  background: transparent;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: background 0.3s, backdrop-filter 0.3s;
+}
+
+/* 스크롤 후 배경 등장 */
+.home-nav--scrolled {
+  background: rgba(250, 247, 242, 0.92);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -58,11 +73,18 @@
 .home-nav-brand {
   font-family: 'Nanum Brush Script', cursive;
   font-size: 30px;
-  color: var(--rose);
+  color: #fff;
   letter-spacing: 0.04em;
   line-height: 1;
   justify-self: center;
   user-select: none;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.25);
+  transition: color 0.3s;
+}
+
+.home-nav--scrolled .home-nav-brand {
+  color: var(--rose);
+  text-shadow: none;
 }
 
 .home-nav-side {
@@ -85,12 +107,14 @@
   border-radius: 10px;
   border: none;
   background: transparent;
-  color: var(--text-sub);
+  color: rgba(255,255,255,0.9);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.3s;
   -webkit-tap-highlight-color: transparent;
 }
-.nav-menu-btn:active { background: var(--bg-alt); }
+.nav-menu-btn:active { background: rgba(255,255,255,0.15); }
+.home-nav--scrolled .nav-menu-btn { color: var(--text-sub); }
+.home-nav--scrolled .nav-menu-btn:active { background: var(--bg-alt); }
 
 /* 크레딧 버튼 */
 .nav-credits-btn {
@@ -120,21 +144,53 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1.5px solid var(--border);
-  background: var(--surface);
-  color: var(--text-sub);
+  border: 1.5px solid rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.9);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.3s, background 0.3s, color 0.3s;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
   flex-shrink: 0;
 }
-.nav-user-btn:active { background: var(--bg-alt); }
-.nav-user-btn--active {
+.nav-user-btn:active { background: rgba(255,255,255,0.25); }
+
+.home-nav--scrolled .nav-user-btn {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-sub);
+}
+.home-nav--scrolled .nav-user-btn:active { background: var(--bg-alt); }
+.home-nav--scrolled .nav-user-btn--active {
   border-color: var(--rose-border);
   background: var(--rose-light);
   color: var(--rose-dark);
 }
+
+/* 비디오 위에서 크레딧 버튼 */
+.nav-credits-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.3s, color 0.3s;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-credits-btn:active { background: rgba(255,255,255,0.3); }
+.home-nav--scrolled .nav-credits-btn {
+  background: var(--rose-light);
+  color: var(--rose-dark);
+}
+.home-nav--scrolled .nav-credits-btn:active { background: #f0d8cc; }
 
 .nav-avatar {
   width: 100%;
