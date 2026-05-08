@@ -102,6 +102,7 @@ export default function Home() {
   const [showCharge, setShowCharge] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showDrawer, setShowDrawer] = useState(false)
+  const [showPricing, setShowPricing] = useState(false)
 
   useEffect(() => {
     if (location.state?.openLogin) setShowLogin(true)
@@ -240,25 +241,6 @@ export default function Home() {
         ))}
       </div>
 
-      <div className="category-section-label">크레딧 요금</div>
-      <div className="pricing-list">
-        {[
-          { credits: 100, count: 10, amount: 3900,  label: '기본' },
-          { credits: 300, count: 30, amount: 9900,  label: '인기', popular: true },
-          { credits: 500, count: 50, amount: 16900, label: '프리미엄' },
-        ].map(pkg => (
-          <div key={pkg.credits} className={`pricing-card${pkg.popular ? ' pricing-popular' : ''}`}>
-            {pkg.popular && <span className="pricing-badge">인기</span>}
-            <div className="pricing-info">
-              <span className="pricing-label">{pkg.label}</span>
-              <span className="pricing-credits">{pkg.credits} 크레딧 · 분석 {pkg.count}회</span>
-            </div>
-            <span className="pricing-price">{pkg.amount.toLocaleString()}원</span>
-          </div>
-        ))}
-        <p className="pricing-note">1회 분석에 10 크레딧이 사용됩니다 · 부가세 포함</p>
-      </div>
-
       <footer className="home-footer">
         <p className="home-footer-brand">토정</p>
         <p>상호명: 토정 · 대표자: 김오성</p>
@@ -277,6 +259,38 @@ export default function Home() {
 
     {showCharge && (
       <ChargeModal user={user} onClose={() => setShowCharge(false)} />
+    )}
+
+    {/* ── 요금 안내 시트 (비로그인) ── */}
+    {showPricing && (
+      <>
+        <div className="login-backdrop" onClick={() => setShowPricing(false)} />
+        <div className="pricing-sheet">
+          <div className="login-sheet-handle" />
+          <p className="pricing-sheet-title">🪙 크레딧 요금 안내</p>
+          <p className="pricing-sheet-sub">로그인 후 크레딧을 충전하면 사주 분석을 이용할 수 있어요</p>
+          <div className="pricing-sheet-list">
+            {[
+              { credits: 100, count: 10, amount: 3900,  label: '기본' },
+              { credits: 300, count: 30, amount: 9900,  label: '인기', popular: true },
+              { credits: 500, count: 50, amount: 16900, label: '프리미엄' },
+            ].map(pkg => (
+              <div key={pkg.credits} className={`pricing-sheet-item${pkg.popular ? ' pricing-sheet-item--popular' : ''}`}>
+                {pkg.popular && <span className="pricing-sheet-badge">인기</span>}
+                <div className="pricing-sheet-info">
+                  <span className="pricing-sheet-label">{pkg.label}</span>
+                  <span className="pricing-sheet-credits">{pkg.credits} 크레딧 · 분석 {pkg.count}회</span>
+                </div>
+                <span className="pricing-sheet-price">{pkg.amount.toLocaleString()}원</span>
+              </div>
+            ))}
+            <p className="pricing-sheet-note">1회 분석에 10 크레딧 · 부가세 포함</p>
+          </div>
+          <button className="pricing-sheet-cta" onClick={() => { setShowPricing(false); setShowLogin(true) }}>
+            로그인하고 시작하기
+          </button>
+        </div>
+      </>
     )}
 
     {/* ── 좌측 드로어 ── */}
@@ -324,7 +338,7 @@ export default function Home() {
               <span className="drawer-item-text">분석 이력</span>
               <svg className="drawer-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
-            <button className="drawer-item" onClick={() => { setShowDrawer(false); user ? setShowCharge(true) : setShowLogin(true) }}>
+            <button className="drawer-item" onClick={() => { setShowDrawer(false); user ? setShowCharge(true) : setShowPricing(true) }}>
               <span className="drawer-item-icon" style={{ background: '#FEF6EB' }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"/>
