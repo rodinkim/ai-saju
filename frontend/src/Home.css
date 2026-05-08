@@ -158,14 +158,15 @@
 .history-btn {
   padding: 5px 10px;
   border-radius: 8px;
-  border: 1px solid #d8d0ec;
+  border: 1px solid var(--border, #E8E0D4);
   background: transparent;
   font-size: 11px;
   font-weight: 600;
-  color: #8A60B0;
+  color: var(--text-sub, #7A6659);
   cursor: pointer;
+  transition: background 0.15s;
 }
-.history-btn:active { background: #f4eef8; }
+.history-btn:active { background: var(--bg-alt, #F2EDE4); }
 
 .logout-btn {
   padding: 5px 10px;
