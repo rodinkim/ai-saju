@@ -155,6 +155,18 @@
 }
 .user-credits:active { background: #fde8ef; }
 
+.history-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid #d8d0ec;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8A60B0;
+  cursor: pointer;
+}
+.history-btn:active { background: #f4eef8; }
+
 .logout-btn {
   padding: 5px 10px;
   border-radius: 8px;

@@ -136,6 +136,7 @@ export default function Home() {
               )}
               <span className="user-name">{user.name}</span>
               <button className="user-credits" onClick={() => setShowCharge(true)}>🪙 {user.credits}</button>
+              <button className="history-btn" onClick={() => navigate('/history')}>이력</button>
               <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
             </div>
           ) : (
