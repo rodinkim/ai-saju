@@ -509,7 +509,6 @@
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.18s var(--ease-spring), box-shadow 0.18s;
   box-shadow: var(--shadow-md);
-  text-align: left;
 }
 .category-card:active {
   transform: scale(0.94);
@@ -544,6 +543,8 @@
   flex-direction: column;
   gap: 2px;
   background: rgba(255,255,255,0.45);
+  text-align: center;
+  align-items: center;
 }
 .category-card-title {
   font-size: 13px;
