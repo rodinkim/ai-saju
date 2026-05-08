@@ -22,9 +22,10 @@ EMBEDDING_MODEL = "jhgan/ko-sroberta-multitask"
 
 
 def load_to_chroma():
-    all_path = DOCS_DIR / "all.json"
-    docs = json.loads(all_path.read_text(encoding="utf-8"))
-    print(f"문서 로드: {len(docs)}개")
+    docs = []
+    for path in sorted(DOCS_DIR.glob("*.json")):
+        docs.extend(json.loads(path.read_text(encoding="utf-8")))
+    print(f"문서 로드: {len(docs)}개 ({len(list(DOCS_DIR.glob('*.json')))}개 파일)")
 
     # 기존 컬렉션 삭제
     raw_client = chromadb.PersistentClient(path=str(CHROMA_DIR))

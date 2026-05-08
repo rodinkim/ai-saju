@@ -63,6 +63,7 @@ def _get_query_chain():
 
 def _build_context_query(four_pillars: FourPillars, category: str) -> str:
     """쿼리 생성 LLM에 전달할 컨텍스트 문자열."""
+    day_pillar_kr   = four_pillars.day_pillar.korean          # 예: 갑신
     day_stem_kr     = _stem_to_korean(four_pillars.day_pillar.heavenly_stem)
     month_branch_kr = _branch_to_korean(four_pillars.month_pillar.earthly_branch)
     year_branch_kr  = _branch_to_korean(four_pillars.year_pillar.earthly_branch)
@@ -80,13 +81,13 @@ def _build_context_query(four_pillars: FourPillars, category: str) -> str:
     }.get(category, "성격·기질, 오행 특성, 용신, 신살·귀인")
 
     return (
-        f"일간: {day_stem_kr}, 월지: {month_branch_kr}, 연지: {year_branch_kr}\n"
+        f"일주: {day_pillar_kr}, 일간: {day_stem_kr}, 월지: {month_branch_kr}, 연지: {year_branch_kr}\n"
         f"분석 주제: {focus}"
     )
 
 
 def search_relevant_theory(
-    four_pillars: FourPillars, n_results: int = 7, category: str = "wealth"
+    four_pillars: FourPillars, n_results: int = 10, category: str = "wealth"
 ) -> str:
     """
     사주팔자에서 핵심 요소를 추출해 관련 이론 문서를 검색합니다.
@@ -108,7 +109,7 @@ def search_relevant_theory(
 
     for query in queries:
         # distance: 코사인 거리 (0=동일, 1=무관). similarity = 1 - distance
-        results = vectorstore.similarity_search_with_score(query, k=3)
+        results = vectorstore.similarity_search_with_score(query, k=5)
         for doc, distance in results:
             doc_id = doc.id or doc.metadata.get("name", doc.page_content[:30])
             if doc_id not in seen_ids:
