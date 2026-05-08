@@ -195,8 +195,7 @@ export default function Home() {
           </button>
         )}
 
-        <div className="category-section-label">나의 사주</div>
-        <div className="category-list">
+        <div className="category-grid">
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
@@ -204,43 +203,19 @@ export default function Home() {
               style={{ background: cat.gradient }}
               onClick={() => navigate('/analyze', { state: { category: cat } })}
             >
-              <div className="category-img-wrap">
-                {cat.image && (
-                  <img
-                    src={cat.image}
-                    alt={cat.title}
-                    className="category-img"
-                    onError={e => { e.currentTarget.style.display = 'none' }}
-                  />
-                )}
-                <div className="category-img-fallback">{cat.icon}</div>
-              </div>
-              <div className="category-info">
-                <div className="category-title" style={{ color: cat.accent }}>{cat.title}</div>
-                <div className="category-sub">{cat.sub}</div>
-              </div>
-              <div className="category-arrow" style={{ color: cat.accent }}>›</div>
+              <span className="category-card-icon">{cat.icon}</span>
+              <span className="category-card-title" style={{ color: cat.accent }}>{cat.title}</span>
             </button>
           ))}
-        </div>
-
-        <div className="category-section-label">두 사람 사주</div>
-        <div className="category-list">
           {RELATION_CATEGORIES.map(cat => (
             <button
               key={cat.id}
-              className="category-card category-card-relation"
+              className="category-card"
               style={{ background: cat.gradient }}
               onClick={() => navigate('/relation', { state: { category: cat } })}
             >
-              <div className="category-img-wrap">
-                <div className="category-img-fallback">{cat.icon}</div>
-              </div>
-              <div className="category-info">
-                <div className="category-title" style={{ color: cat.accent }}>{cat.title}</div>
-                <div className="category-sub">{cat.sub}</div>
-              </div>
-              <div className="category-arrow" style={{ color: cat.accent }}>›</div>
+              <span className="category-card-icon">{cat.icon}</span>
+              <span className="category-card-title" style={{ color: cat.accent }}>{cat.title}</span>
             </button>
           ))}
         </div>
