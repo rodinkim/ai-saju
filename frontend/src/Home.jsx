@@ -179,12 +179,6 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ── 히어로 ── */}
-      <header className="home-hero">
-        <h1 className="home-title">오늘, 무엇이<br /><em>궁금하세요?</em></h1>
-        <p className="home-sub">명리학으로 나를 더 깊이 이해해보세요</p>
-      </header>
-
       {!user && (
         <button className="free-credit-banner" onClick={() => setShowLogin(true)}>
           <span className="free-credit-badge">무료</span>
