@@ -133,6 +133,18 @@ export default function Home() {
 
   return (
     <>
+    {/* ── 배경 동영상 ── */}
+    <video
+      className="home-bg-video"
+      src="/saju_back.mp4"
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+    />
+    <div className="home-bg-overlay" />
+
     <div className="home-page">
 
       {/* ── 네비게이션 바 ── */}
